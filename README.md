@@ -8,15 +8,20 @@ Just open `index.html` in any browser (double-click the file). There's nothing t
 
 ## What's inside
 
-- **Today** — a daily dashboard: today's goals, today's habits to check off, and a quick reflection space.
-- **Goals** — separate lists for **daily**, **weekly**, and **quarterly** goals, plus a quarter "theme" to anchor the next 90 days. Check items off as you complete them. All empty for you to fill in.
+- **Today** — a daily dashboard: today's goals, today's habits to check off, a quick reflection space, and your current **level + XP bar**.
+- **Goals** — separate lists for **daily**, **weekly**, **monthly**, and **quarterly** goals, plus a quarter "theme" to anchor the next 90 days. Check items off as you complete them. All empty for you to fill in.
 - **Habits** — a weekly habit grid. Add the habits you want to build, click a square per day, and watch your 🔥 streak grow. Navigate between weeks with the arrows.
 - **Life Audit** — rate your satisfaction 1–10 across three areas:
   - Health & Fitness
   - Career & Finances
   - Personal Growth & Fun
 
-  A **Wheel of Life** visualizes your balance at a glance, and a quarterly review box prompts you to pick what to invest in next. Re-do the audit each quarter (change the date) to see how things shift.
+  A **Wheel of Life** visualizes your balance at a glance, and a quarterly review box prompts you to pick what to invest in next. Tap **Save snapshot** to record the audit on a date so you can track it over time.
+- **Progress** — your gamified dashboard:
+  - **Level & XP** — earn XP for finishing goals (daily 15 · weekly 30 · monthly 50 · quarterly 100), checking off habits (10 each), and logging audits (40 each). Cross a threshold and a **level-up celebration** pops with confetti.
+  - **Stats** — goals done, habit check-ins, best streak, active days, audits logged, total XP.
+  - **Achievements** — milestone badges that unlock as you keep showing up.
+  - **Audit trends** — a line chart of each area's satisfaction over every snapshot you've saved, so you can see what's improving and what's slipping.
 
 ## Your data
 

@@ -17,6 +17,8 @@
     --warm-soft: #f6e9df;
     --blue: #5e7fa3;
     --blue-soft: #e4ebf2;
+    --purple: #8a6fa3;
+    --purple-soft: #ece4f2;
     --radius: 14px;
     --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.04);
   }
@@ -89,6 +91,7 @@
   .grid { display: grid; gap: 16px; }
   .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
   .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); }
 
   .card {
     background: var(--panel);
@@ -118,6 +121,7 @@
   }
   .tag.warm { color: var(--warm); background: var(--warm-soft); }
   .tag.blue { color: var(--blue); background: var(--blue-soft); }
+  .tag.purple { color: var(--purple); background: var(--purple-soft); }
 
   /* Goals */
   .goal-list { list-style: none; margin: 0; padding: 0; }
@@ -231,6 +235,90 @@
   /* Wheel */
   .wheel-wrap { display: flex; justify-content: center; padding: 10px 0; }
 
+  /* Gamification */
+  .level-card {
+    background: linear-gradient(135deg, #2b2b2b, #3c3a44);
+    color: #fff; border: none;
+  }
+  .level-top { display: flex; align-items: center; gap: 16px; }
+  .level-badge {
+    width: 64px; height: 64px; border-radius: 18px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+    box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  }
+  .level-meta .lvl-num { font-size: 13px; opacity: .7; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .level-meta .lvl-title { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+  .xp-bar {
+    margin-top: 16px; height: 12px; border-radius: 999px;
+    background: rgba(255,255,255,.15); overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #8fd6a0);
+    transition: width .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .xp-text { margin-top: 7px; font-size: 12.5px; opacity: .8; display: flex; justify-content: space-between; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .stat .num { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  .stat .lbl { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .stat .ico { font-size: 18px; }
+
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 13px; }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 600; }
+  .chart-legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .empty-hint { color: var(--muted); font-size: 14px; padding: 20px 0; text-align: center; }
+
+  .snap-list { list-style: none; margin: 14px 0 0; padding: 0; }
+  .snap-item {
+    display: flex; align-items: center; gap: 12px; padding: 8px 0;
+    border-bottom: 1px dashed var(--line); font-size: 13.5px;
+  }
+  .snap-item:last-child { border-bottom: none; }
+  .snap-item .date { font-weight: 600; min-width: 92px; }
+  .snap-item .ov { color: var(--accent); font-weight: 700; }
+  .snap-item .row-del { opacity: .4; margin-left: auto; }
+  .snap-item:hover .row-del { opacity: 1; }
+
+  .badge-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .badge {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: #fff; color: var(--muted);
+  }
+  .badge.earned { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); }
+  .badge .b-ico { font-size: 16px; filter: grayscale(1); opacity: .5; }
+  .badge.earned .b-ico { filter: none; opacity: 1; }
+
+  /* Level-up celebration */
+  .celebrate-overlay {
+    position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+    background: rgba(20,18,16,.55); backdrop-filter: blur(3px); animation: fade .3s ease;
+  }
+  .celebrate-card {
+    background: var(--panel); border-radius: 22px; padding: 36px 40px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3); max-width: 340px; animation: pop .45s cubic-bezier(.2,1.3,.4,1);
+  }
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .celebrate-card .big {
+    width: 88px; height: 88px; margin: 0 auto 14px; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+  }
+  .celebrate-card h3 { margin: 0 0 4px; font-size: 22px; }
+  .celebrate-card p { margin: 0 0 18px; color: var(--muted); }
+  .celebrate-card button {
+    border: none; background: var(--ink); color: #fff; font: inherit; font-weight: 700;
+    padding: 10px 24px; border-radius: 10px; cursor: pointer;
+  }
+  .confetti { position: absolute; width: 9px; height: 14px; top: -20px; animation: drop linear forwards; }
+  @keyframes drop { to { transform: translateY(105vh) rotate(540deg); opacity: 1; } }
+
   footer {
     max-width: 1100px; margin: 0 auto; padding: 0 16px 40px;
     color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
@@ -285,19 +373,33 @@ let state = load();
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return migrate(JSON.parse(raw));
   } catch (e) {}
   return defaultState();
 }
 function defaultState() {
   return {
-    goals: { daily: [], weekly: [], quarterly: [] },
+    goals: { daily: [], weekly: [], monthly: [], quarterly: [] },
     habits: [],          // { id, name, days: { "2026-06-10": true } }
     audit: auditDefaults(),
     auditDate: today(),
     quarterTheme: "",
-    reflections: { weekWin: "", weekImprove: "", quarterReview: "" }
+    reflections: { weekWin: "", weekImprove: "", quarterReview: "" },
+    auditHistory: [],    // [{ date, areas: {name: avg}, overall }]
+    gamification: { lastSeenLevel: 1 }
   };
+}
+// Ensure older saved data has every field this version expects.
+function migrate(s) {
+  if (!s.goals) s.goals = {};
+  ["daily", "weekly", "monthly", "quarterly"].forEach(k => { if (!Array.isArray(s.goals[k])) s.goals[k] = []; });
+  if (!Array.isArray(s.habits)) s.habits = [];
+  if (!Array.isArray(s.audit)) s.audit = auditDefaults();
+  if (!s.reflections) s.reflections = { weekWin: "", weekImprove: "", quarterReview: "" };
+  if (!Array.isArray(s.auditHistory)) s.auditHistory = [];
+  if (!s.gamification) s.gamification = { lastSeenLevel: 1 };
+  if (s.gamification.lastSeenLevel == null) s.gamification.lastSeenLevel = 1;
+  return s;
 }
 function auditDefaults() {
   return [
@@ -354,7 +456,8 @@ const TABS = [
   { id: "today", label: "Today" },
   { id: "goals", label: "Goals" },
   { id: "habits", label: "Habits" },
-  { id: "audit", label: "Life Audit" }
+  { id: "audit", label: "Life Audit" },
+  { id: "progress", label: "Progress" }
 ];
 let activeTab = "today";
 let weekOffset = 0; // for habit tracker
@@ -383,6 +486,8 @@ function render() {
   if (activeTab === "goals") renderGoals(view);
   if (activeTab === "habits") renderHabits(view);
   if (activeTab === "audit") renderAudit(view);
+  if (activeTab === "progress") renderProgress(view);
+  checkLevelUp();
 }
 
 /* ---------------- Auto-grow textarea ---------------- */
@@ -408,7 +513,7 @@ function goalCard(title, scope, tagClass, hint) {
       const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = g.done;
-      cb.onchange = () => { g.done = cb.checked; save(); draw(); };
+      cb.onchange = () => { g.done = cb.checked; save(); draw(); checkLevelUp(); };
       const ta = document.createElement("textarea");
       ta.className = "text";
       ta.rows = 1;
@@ -438,9 +543,10 @@ function goalCard(title, scope, tagClass, hint) {
 
 function renderGoals(view) {
   const grid = document.createElement("div");
-  grid.className = "grid cols-3";
+  grid.className = "grid cols-4";
   grid.appendChild(goalCard("Daily", "daily", "", "Today's focus. Keep it to a handful of things that actually move the needle."));
   grid.appendChild(goalCard("Weekly", "weekly", "blue", "What does a good week look like? Set these every Sunday or Monday."));
+  grid.appendChild(goalCard("Monthly", "monthly", "purple", "The milestones for this month — projects to finish, habits to land."));
   grid.appendChild(goalCard("Quarterly", "quarterly", "warm", "The bigger rocks — the 2-4 things you want to be true 3 months from now."));
   view.appendChild(grid);
 
@@ -563,9 +669,22 @@ function renderToday(view) {
   banner.style.background = "linear-gradient(135deg, #6b8f71, #5e7fa3)";
   banner.style.color = "#fff";
   banner.style.border = "none";
+  const _xp = totalXP(), _L = levelFromXP(_xp);
+  const _base = xpForLevel(_L), _next = xpForLevel(_L + 1);
+  const _pct = Math.round(((_xp - _base) / (_next - _base)) * 100);
   banner.innerHTML = `<div style="font-size:13px;opacity:.85;font-weight:600">${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
     <div style="font-size:22px;font-weight:700;margin-top:2px">${greeting}.</div>
-    ${state.quarterTheme ? `<div style="margin-top:8px;font-size:14px;opacity:.9">Quarter theme: <strong>${escapeHtml(state.quarterTheme)}</strong></div>` : ''}`;
+    ${state.quarterTheme ? `<div style="margin-top:8px;font-size:14px;opacity:.9">Quarter theme: <strong>${escapeHtml(state.quarterTheme)}</strong></div>` : ''}
+    <div style="margin-top:14px;display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px">${_L}</div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;font-weight:700;opacity:.95">Level ${_L} · ${levelTitle(_L)}</div>
+        <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:5px">
+          <div style="height:100%;width:${_pct}%;background:#fff;border-radius:999px;transition:width .6s"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;opacity:.85;white-space:nowrap">${_next - _xp} XP to L${_L + 1}</div>
+    </div>`;
   view.appendChild(banner);
 
   const grid = document.createElement("div");
@@ -594,7 +713,7 @@ function renderToday(view) {
       li.className = "goal-item" + (h.days[iso] ? " done" : "");
       const cb = document.createElement("input");
       cb.type = "checkbox"; cb.checked = !!h.days[iso];
-      cb.onchange = () => { if (cb.checked) h.days[iso]=true; else delete h.days[iso]; save(); renderToday(clearView(view)); };
+      cb.onchange = () => { if (cb.checked) h.days[iso]=true; else delete h.days[iso]; save(); render(); };
       const span = document.createElement("span");
       span.className = "text";
       span.style.whiteSpace = "normal";
@@ -645,6 +764,15 @@ function renderAudit(view) {
   dInp.onchange = () => { state.auditDate = dInp.value; save(); };
   dateRow.appendChild(dInp);
   intro.appendChild(dateRow);
+  const snapBtn = document.createElement("button");
+  snapBtn.className = "add-btn";
+  snapBtn.style.marginTop = "14px";
+  snapBtn.style.borderStyle = "solid";
+  snapBtn.style.borderColor = "var(--accent)";
+  snapBtn.style.color = "var(--accent)";
+  snapBtn.textContent = "📸 Save snapshot (+40 XP) — track this audit over time";
+  snapBtn.onclick = () => { saveSnapshot(); render(); };
+  intro.appendChild(snapBtn);
   view.appendChild(intro);
 
   // Wheel of life
@@ -769,6 +897,244 @@ function drawWheel() {
     path.setAttribute("stroke-width", "1");
     svg.appendChild(path);
   }
+  return svg;
+}
+
+/* ---------------- Gamification ---------------- */
+const SCOPE_XP = { daily: 15, weekly: 30, monthly: 50, quarterly: 100 };
+const LEVEL_TITLES = ["Seedling","Sprout","Sapling","Grower","Cultivator","Pathfinder","Trailblazer","Achiever","Champion","Luminary","Legend"];
+
+// All XP is derived from current state, so it can never desync or double-count.
+function totalXP() {
+  let xp = 0;
+  for (const scope in state.goals) {
+    const w = SCOPE_XP[scope] || 15;
+    state.goals[scope].forEach(g => { if (g.done) xp += w; });
+  }
+  state.habits.forEach(h => { xp += Object.keys(h.days).filter(d => h.days[d]).length * 10; });
+  xp += (state.auditHistory || []).length * 40;
+  return xp;
+}
+function xpForLevel(L) { return 50 * L * (L - 1); }   // cumulative XP to reach level L
+function levelFromXP(xp) { let L = 1; while (xpForLevel(L + 1) <= xp) L++; return L; }
+function levelTitle(L) { return LEVEL_TITLES[Math.min(L - 1, LEVEL_TITLES.length - 1)]; }
+
+function goalsCompleted() {
+  let n = 0; for (const s in state.goals) n += state.goals[s].filter(g => g.done).length; return n;
+}
+function habitsChecked() {
+  return state.habits.reduce((s, h) => s + Object.keys(h.days).filter(d => h.days[d]).length, 0);
+}
+function bestStreakEver() {
+  let best = 0;
+  state.habits.forEach(h => {
+    const days = Object.keys(h.days).filter(d => h.days[d]).sort();
+    let run = 0, prev = null;
+    days.forEach(d => {
+      if (prev && Math.round((new Date(d) - new Date(prev)) / 86400000) === 1) run++; else run = 1;
+      best = Math.max(best, run); prev = d;
+    });
+  });
+  return best;
+}
+function activeDays() {
+  const set = new Set();
+  state.habits.forEach(h => Object.keys(h.days).forEach(d => { if (h.days[d]) set.add(d); }));
+  return set.size;
+}
+
+function checkLevelUp() {
+  const L = levelFromXP(totalXP());
+  const seen = state.gamification.lastSeenLevel || 1;
+  if (L !== seen) {
+    state.gamification.lastSeenLevel = L;
+    save();
+    if (L > seen) celebrate(L);
+  }
+}
+function celebrate(L) {
+  const overlay = document.createElement("div");
+  overlay.className = "celebrate-overlay";
+  const colors = ["#6b8f71","#5e7fa3","#c98a5e","#8a6fa3","#8fd6a0"];
+  let confetti = "";
+  for (let i = 0; i < 40; i++) {
+    const left = Math.random() * 100, delay = Math.random() * 0.4, dur = 1.6 + Math.random() * 1.4;
+    const col = colors[i % colors.length];
+    confetti += `<div class="confetti" style="left:${left}%;background:${col};animation-duration:${dur}s;animation-delay:${delay}s;opacity:0"></div>`;
+  }
+  overlay.innerHTML = confetti +
+    `<div class="celebrate-card">
+       <div class="big">${L}</div>
+       <h3>Level up!</h3>
+       <p>You reached level ${L} — <strong>${levelTitle(L)}</strong>.</p>
+       <button>Keep going</button>
+     </div>`;
+  overlay.querySelector("button").onclick = () => overlay.remove();
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function saveSnapshot() {
+  const entry = { date: state.auditDate || today(), areas: {}, overall: 0 };
+  let sum = 0, c = 0;
+  state.audit.forEach(a => { const av = areaAvg(a); entry.areas[a.area] = av; if (av) { sum += av; c++; } });
+  if (!c) { alert("Rate a few areas before saving a snapshot."); return; }
+  entry.overall = sum / c;
+  // replace any existing snapshot with the same date
+  state.auditHistory = state.auditHistory.filter(s => s.date !== entry.date);
+  state.auditHistory.push(entry);
+  save();
+  alert("Snapshot saved for " + entry.date + ". See it in the Progress tab.");
+}
+
+function renderProgress(view) {
+  const xp = totalXP();
+  const L = levelFromXP(xp);
+  const base = xpForLevel(L), next = xpForLevel(L + 1);
+  const pct = Math.round(((xp - base) / (next - base)) * 100);
+
+  // Level card
+  const lvl = document.createElement("div");
+  lvl.className = "card level-card";
+  lvl.innerHTML = `
+    <div class="level-top">
+      <div class="level-badge">${L}</div>
+      <div class="level-meta">
+        <div class="lvl-num">Level ${L}</div>
+        <div class="lvl-title">${levelTitle(L)}</div>
+      </div>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" style="width:${pct}%"></div></div>
+    <div class="xp-text"><span>${xp} XP total</span><span>${next - xp} XP to level ${L + 1}</span></div>`;
+  view.appendChild(lvl);
+
+  // Stats
+  const statsCard = document.createElement("div");
+  statsCard.className = "card";
+  statsCard.style.marginTop = "16px";
+  statsCard.innerHTML = `<h2>Your stats</h2><p class="hint">Earn XP by finishing goals (daily 15 · weekly 30 · monthly 50 · quarterly 100), checking off habits (10 each), and logging audits (40 each).</p>`;
+  const sg = document.createElement("div"); sg.className = "stats-grid";
+  const stats = [
+    ["🎯", goalsCompleted(), "Goals done"],
+    ["✅", habitsChecked(), "Habit check-ins"],
+    ["🔥", bestStreakEver(), "Best streak"],
+    ["📅", activeDays(), "Active days"],
+    ["📊", (state.auditHistory||[]).length, "Audits logged"],
+    ["⭐", xp, "Total XP"]
+  ];
+  stats.forEach(([ico, num, lbl]) => {
+    const el = document.createElement("div"); el.className = "stat";
+    el.innerHTML = `<div class="ico">${ico}</div><div class="num">${num}</div><div class="lbl">${lbl}</div>`;
+    sg.appendChild(el);
+  });
+  statsCard.appendChild(sg);
+  view.appendChild(statsCard);
+
+  // Badges
+  const badgeCard = document.createElement("div");
+  badgeCard.className = "card"; badgeCard.style.marginTop = "16px";
+  badgeCard.innerHTML = `<h2>Achievements</h2><p class="hint">Milestones unlock as you keep showing up.</p>`;
+  const bg = document.createElement("div"); bg.className = "badge-grid";
+  const badges = [
+    ["🌱", "First steps", goalsCompleted() >= 1],
+    ["🔥", "7-day streak", bestStreakEver() >= 7],
+    ["💪", "30-day streak", bestStreakEver() >= 30],
+    ["🎯", "10 goals done", goalsCompleted() >= 10],
+    ["📊", "First audit", (state.auditHistory||[]).length >= 1],
+    ["🧭", "Quarterly check-in", (state.auditHistory||[]).length >= 2],
+    ["⭐", "Reach level 5", L >= 5],
+    ["👑", "Reach level 10", L >= 10]
+  ];
+  badges.forEach(([ico, name, earned]) => {
+    const el = document.createElement("div"); el.className = "badge" + (earned ? " earned" : "");
+    el.innerHTML = `<span class="b-ico">${ico}</span>${name}`;
+    bg.appendChild(el);
+  });
+  badgeCard.appendChild(bg);
+  view.appendChild(badgeCard);
+
+  // Audit trend
+  const trend = document.createElement("div");
+  trend.className = "card"; trend.style.marginTop = "16px";
+  trend.innerHTML = `<h2>Audit trends</h2><p class="hint">How your satisfaction in each area moves over time. Save a snapshot from the Life Audit tab to add a point.</p>`;
+  const hist = (state.auditHistory || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  if (hist.length === 0) {
+    const e = document.createElement("div"); e.className = "empty-hint";
+    e.textContent = "No snapshots yet. Go to Life Audit, rate your areas, and tap “Save snapshot”.";
+    trend.appendChild(e);
+  } else {
+    trend.appendChild(auditTrendChart(hist));
+    const legend = document.createElement("div"); legend.className = "chart-legend";
+    state.audit.forEach(a => {
+      legend.innerHTML += `<span><i style="background:${a.color}"></i>${escapeHtml(a.area)}</span>`;
+    });
+    legend.innerHTML += `<span><i style="background:#2b2b2b;height:4px"></i>Overall</span>`;
+    trend.appendChild(legend);
+
+    const ul = document.createElement("ul"); ul.className = "snap-list";
+    hist.slice().reverse().forEach(snap => {
+      const li = document.createElement("li"); li.className = "snap-item";
+      li.innerHTML = `<span class="date">${snap.date}</span><span class="ov">overall ${snap.overall.toFixed(1)}</span>`;
+      const del = document.createElement("button"); del.className = "row-del"; del.innerHTML = "✕"; del.title = "Delete snapshot";
+      del.onclick = () => { state.auditHistory = state.auditHistory.filter(s => s !== snap); save(); render(); };
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+    trend.appendChild(ul);
+  }
+  view.appendChild(trend);
+}
+
+function auditTrendChart(hist) {
+  const W = 620, H = 260, padL = 34, padR = 14, padT = 14, padB = 28;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", "100%");
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const x = i => hist.length === 1 ? padL + innerW / 2 : padL + (innerW * i) / (hist.length - 1);
+  const y = v => padT + innerH * (1 - v / 10);
+
+  // gridlines + y labels (0,5,10)
+  [0, 2, 4, 6, 8, 10].forEach(v => {
+    const ln = document.createElementNS(svg.namespaceURI, "line");
+    ln.setAttribute("x1", padL); ln.setAttribute("x2", W - padR);
+    ln.setAttribute("y1", y(v)); ln.setAttribute("y2", y(v));
+    ln.setAttribute("stroke", "#e7e4df"); ln.setAttribute("stroke-width", v === 0 ? 1.5 : 1);
+    svg.appendChild(ln);
+    const t = document.createElementNS(svg.namespaceURI, "text");
+    t.setAttribute("x", padL - 8); t.setAttribute("y", y(v) + 4);
+    t.setAttribute("text-anchor", "end"); t.setAttribute("font-size", "10"); t.setAttribute("fill", "#8a8580");
+    t.textContent = v; svg.appendChild(t);
+  });
+  // x labels
+  hist.forEach((s, i) => {
+    const t = document.createElementNS(svg.namespaceURI, "text");
+    t.setAttribute("x", x(i)); t.setAttribute("y", H - 8);
+    t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "10"); t.setAttribute("fill", "#8a8580");
+    t.textContent = s.date.slice(5); // MM-DD
+    svg.appendChild(t);
+  });
+
+  function line(getVal, color, width) {
+    const pts = hist.map((s, i) => [x(i), y(getVal(s))]);
+    if (hist.length > 1) {
+      const path = document.createElementNS(svg.namespaceURI, "path");
+      path.setAttribute("d", "M " + pts.map(p => p.join(" ")).join(" L "));
+      path.setAttribute("fill", "none"); path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", width); path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("stroke-linecap", "round");
+      svg.appendChild(path);
+    }
+    pts.forEach(([px, py], i) => {
+      if (getVal(hist[i]) === 0) return;
+      const c = document.createElementNS(svg.namespaceURI, "circle");
+      c.setAttribute("cx", px); c.setAttribute("cy", py); c.setAttribute("r", width + 1.5);
+      c.setAttribute("fill", color);
+      svg.appendChild(c);
+    });
+  }
+  state.audit.forEach(a => line(s => s.areas[a.area] || 0, a.color, 2));
+  line(s => s.overall || 0, "#2b2b2b", 3);
   return svg;
 }
 
