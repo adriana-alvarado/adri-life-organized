@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Life Organized</title>
+<style>
+  :root {
+    --bg: #f6f5f3;
+    --panel: #ffffff;
+    --ink: #2b2b2b;
+    --muted: #8a8580;
+    --line: #e7e4df;
+    --accent: #6b8f71;
+    --accent-soft: #e8f0e9;
+    --warm: #c98a5e;
+    --warm-soft: #f6e9df;
+    --blue: #5e7fa3;
+    --blue-soft: #e4ebf2;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  header.app {
+    padding: 28px 24px 12px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  header.app h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header.app .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  nav.tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.tabs .inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+    overflow-x: auto;
+  }
+  nav.tabs button {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s ease;
+  }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button.active {
+    background: var(--ink);
+    color: #fff;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+  .view { display: none; animation: fade .25s ease; }
+  .view.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .grid { display: grid; gap: 16px; }
+  .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .card h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .tag.warm { color: var(--warm); background: var(--warm-soft); }
+  .tag.blue { color: var(--blue); background: var(--blue-soft); }
+
+  /* Goals */
+  .goal-list { list-style: none; margin: 0; padding: 0; }
+  .goal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .goal-item:last-child { border-bottom: none; }
+  .goal-item input[type=checkbox] {
+    width: 18px; height: 18px;
+    margin-top: 3px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .goal-item .text {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    overflow: hidden;
+    min-height: 24px;
+  }
+  .goal-item .text::placeholder { color: var(--muted); }
+  .goal-item.done .text { text-decoration: line-through; color: var(--muted); }
+  .goal-item .del {
+    border: none; background: none; color: var(--muted);
+    cursor: pointer; font-size: 16px; opacity: 0; transition: opacity .15s; padding: 0 4px;
+  }
+  .goal-item:hover .del { opacity: 1; }
+  .add-btn {
+    margin-top: 10px;
+    border: 1px dashed var(--line);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: all .15s;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Habits */
+  .habit-table { width: 100%; border-collapse: collapse; }
+  .habit-table th, .habit-table td { text-align: center; padding: 6px 4px; font-size: 13px; }
+  .habit-table th { color: var(--muted); font-weight: 600; }
+  .habit-table td.name, .habit-table th.name { text-align: left; min-width: 130px; }
+  .habit-name-input {
+    border: none; background: transparent; font: inherit; font-weight: 600;
+    color: var(--ink); width: 100%; outline: none;
+  }
+  .habit-name-input::placeholder { color: var(--muted); font-weight: 500; }
+  .hcell {
+    width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--line);
+    cursor: pointer; margin: 0 auto; transition: all .12s; background: #fff;
+  }
+  .hcell.on { background: var(--accent); border-color: var(--accent); }
+  .hcell:hover { border-color: var(--accent); }
+  .habit-streak { font-size: 12px; color: var(--accent); font-weight: 700; }
+  .row-del {
+    border: none; background: none; color: var(--muted); cursor: pointer;
+    opacity: 0; font-size: 15px;
+  }
+  tr:hover .row-del { opacity: 1; }
+  .week-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .week-nav button {
+    border: 1px solid var(--line); background: #fff; border-radius: 8px;
+    width: 30px; height: 30px; cursor: pointer; font-size: 16px; color: var(--ink);
+  }
+  .week-nav button:hover { background: var(--bg); }
+  .week-nav .label { font-weight: 600; font-size: 14px; }
+
+  /* Audit */
+  .audit-area { margin-bottom: 8px; }
+  .audit-row {
+    display: flex; align-items: center; gap: 14px; padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .audit-row:last-child { border-bottom: none; }
+  .audit-label { flex: 1; }
+  .audit-label .name { font-weight: 600; font-size: 14px; }
+  .audit-label .note {
+    border: none; background: transparent; font: inherit; font-size: 12.5px;
+    color: var(--muted); width: 100%; outline: none; margin-top: 2px;
+  }
+  .audit-label .note::placeholder { color: var(--line); color: #c9c5bf; }
+  .rating { display: flex; gap: 4px; flex: 0 0 auto; }
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line);
+    cursor: pointer; background: #fff; transition: all .1s;
+  }
+  .dot.filled { background: var(--score-color, var(--accent)); border-color: var(--score-color, var(--accent)); }
+  .score-badge {
+    width: 40px; text-align: right; font-weight: 700; font-size: 15px; color: var(--muted); flex: 0 0 auto;
+  }
+  .area-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
+  .area-avg { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  /* Wheel */
+  .wheel-wrap { display: flex; justify-content: center; padding: 10px 0; }
+
+  footer {
+    max-width: 1100px; margin: 0 auto; padding: 0 16px 40px;
+    color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer button {
+    border: 1px solid var(--line); background: #fff; color: var(--muted);
+    border-radius: 8px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 12px;
+  }
+  footer button:hover { color: var(--ink); }
+  .save-flash { color: var(--accent); font-weight: 600; opacity: 0; transition: opacity .3s; }
+  .save-flash.show { opacity: 1; }
+  textarea.notes {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    font: inherit; resize: vertical; min-height: 90px; outline: none; background: #fff;
+  }
+  textarea.notes:focus { border-color: var(--accent); }
+  .pill-input {
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit;
+    outline: none; background: #fff;
+  }
+  .pill-input:focus { border-color: var(--accent); }
+  label.field { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header class="app">
+  <h1>Life Organized</h1>
+  <div class="sub">A quiet place to set goals, build habits, and check in with yourself. Everything saves automatically in this browser.</div>
+</header>
+
+<nav class="tabs">
+  <div class="inner" id="tabBar"></div>
+</nav>
+
+<main id="main"></main>
+
+<footer>
+  <div><span id="saveFlash" class="save-flash">Saved ✓</span></div>
+  <div style="display:flex; gap:8px;">
+    <button id="exportBtn">Export data</button>
+    <button id="importBtn">Import data</button>
+    <button id="resetBtn">Reset all</button>
+  </div>
+</footer>
+<input type="file" id="importFile" accept="application/json" style="display:none" />
+
+<script>
+/* ---------------- Storage ---------------- */
+const KEY = "life-organized-v1";
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return defaultState();
+}
+function defaultState() {
+  return {
+    goals: { daily: [], weekly: [], quarterly: [] },
+    habits: [],          // { id, name, days: { "2026-06-10": true } }
+    audit: auditDefaults(),
+    auditDate: today(),
+    quarterTheme: "",
+    reflections: { weekWin: "", weekImprove: "", quarterReview: "" }
+  };
+}
+function auditDefaults() {
+  return [
+    { area: "Health & Fitness", color: "#6b8f71", items: [
+      { name: "Physical fitness", score: 0, note: "" },
+      { name: "Nutrition", score: 0, note: "" },
+      { name: "Sleep & rest", score: 0, note: "" },
+      { name: "Energy levels", score: 0, note: "" }
+    ]},
+    { area: "Career & Finances", color: "#5e7fa3", items: [
+      { name: "Career satisfaction", score: 0, note: "" },
+      { name: "Professional growth", score: 0, note: "" },
+      { name: "Income & stability", score: 0, note: "" },
+      { name: "Savings & investing", score: 0, note: "" }
+    ]},
+    { area: "Personal Growth & Fun", color: "#c98a5e", items: [
+      { name: "Learning & skills", score: 0, note: "" },
+      { name: "Hobbies & creativity", score: 0, note: "" },
+      { name: "Mental health", score: 0, note: "" },
+      { name: "Fun & recreation", score: 0, note: "" }
+    ]}
+  ];
+}
+let saveTimer;
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  clearTimeout(saveTimer);
+  const f = document.getElementById("saveFlash");
+  f.classList.add("show");
+  saveTimer = setTimeout(() => f.classList.remove("show"), 1200);
+}
+
+/* ---------------- Date helpers ---------------- */
+function today() { return toISO(new Date()); }
+function toISO(d) { return d.toISOString().slice(0, 10); }
+function startOfWeek(d) {
+  const x = new Date(d);
+  const day = (x.getDay() + 6) % 7; // Monday = 0
+  x.setDate(x.getDate() - day);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function fmtRange(start) {
+  const end = addDays(start, 6);
+  const opt = { month: "short", day: "numeric" };
+  return start.toLocaleDateString(undefined, opt) + " – " + end.toLocaleDateString(undefined, opt);
+}
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+/* ---------------- Tabs ---------------- */
+const TABS = [
+  { id: "today", label: "Today" },
+  { id: "goals", label: "Goals" },
+  { id: "habits", label: "Habits" },
+  { id: "audit", label: "Life Audit" }
+];
+let activeTab = "today";
+let weekOffset = 0; // for habit tracker
+
+function renderTabs() {
+  const bar = document.getElementById("tabBar");
+  bar.innerHTML = "";
+  TABS.forEach(t => {
+    const b = document.createElement("button");
+    b.textContent = t.label;
+    b.className = t.id === activeTab ? "active" : "";
+    b.onclick = () => { activeTab = t.id; render(); };
+    bar.appendChild(b);
+  });
+}
+
+/* ---------------- Render dispatch ---------------- */
+function render() {
+  renderTabs();
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  const view = document.createElement("div");
+  view.className = "view active";
+  main.appendChild(view);
+  if (activeTab === "today") renderToday(view);
+  if (activeTab === "goals") renderGoals(view);
+  if (activeTab === "habits") renderHabits(view);
+  if (activeTab === "audit") renderAudit(view);
+}
+
+/* ---------------- Auto-grow textarea ---------------- */
+function autogrow(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+/* ---------------- Goals ---------------- */
+function goalCard(title, scope, tagClass, hint) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<h2>${title} <span class="tag ${tagClass}">${scope}</span></h2><p class="hint">${hint}</p>`;
+  const ul = document.createElement("ul");
+  ul.className = "goal-list";
+  card.appendChild(ul);
+
+  function draw() {
+    ul.innerHTML = "";
+    state.goals[scope].forEach((g, i) => {
+      const li = document.createElement("li");
+      li.className = "goal-item" + (g.done ? " done" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = g.done;
+      cb.onchange = () => { g.done = cb.checked; save(); draw(); };
+      const ta = document.createElement("textarea");
+      ta.className = "text";
+      ta.rows = 1;
+      ta.placeholder = "Write a goal…";
+      ta.value = g.text || "";
+      ta.oninput = () => { g.text = ta.value; autogrow(ta); save(); };
+      ta.onfocus = () => autogrow(ta);
+      const del = document.createElement("button");
+      del.className = "del";
+      del.innerHTML = "✕";
+      del.title = "Delete";
+      del.onclick = () => { state.goals[scope].splice(i, 1); save(); draw(); };
+      li.appendChild(cb); li.appendChild(ta); li.appendChild(del);
+      ul.appendChild(li);
+      setTimeout(() => autogrow(ta), 0);
+    });
+  }
+  draw();
+  const add = document.createElement("button");
+  add.className = "add-btn";
+  add.textContent = "+ Add goal";
+  add.onclick = () => { state.goals[scope].push({ text: "", done: false }); save(); draw();
+    setTimeout(() => { const tas = ul.querySelectorAll(".text"); tas[tas.length-1]?.focus(); }, 0); };
+  card.appendChild(add);
+  return card;
+}
+
+function renderGoals(view) {
+  const grid = document.createElement("div");
+  grid.className = "grid cols-3";
+  grid.appendChild(goalCard("Daily", "daily", "", "Today's focus. Keep it to a handful of things that actually move the needle."));
+  grid.appendChild(goalCard("Weekly", "weekly", "blue", "What does a good week look like? Set these every Sunday or Monday."));
+  grid.appendChild(goalCard("Quarterly", "quarterly", "warm", "The bigger rocks — the 2-4 things you want to be true 3 months from now."));
+  view.appendChild(grid);
+
+  // Quarter theme + reflection
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.marginTop = "16px";
+  card.innerHTML = `<h2>This quarter's theme <span class="tag warm">focus</span></h2>
+    <p class="hint">One phrase to anchor the next 90 days (e.g. "Build, don't polish").</p>`;
+  const inp = document.createElement("input");
+  inp.className = "pill-input";
+  inp.style.width = "100%";
+  inp.placeholder = "Name your theme…";
+  inp.value = state.quarterTheme || "";
+  inp.oninput = () => { state.quarterTheme = inp.value; save(); };
+  card.appendChild(inp);
+  view.appendChild(card);
+}
+
+/* ---------------- Habits ---------------- */
+function renderHabits(view) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<h2>Habit Tracker <span class="tag">streaks</span></h2>
+    <p class="hint">Click a square to mark a habit done that day. Add the habits you want to build below.</p>`;
+
+  const start = startOfWeek(addDays(new Date(), weekOffset * 7));
+  const nav = document.createElement("div");
+  nav.className = "week-nav";
+  const prev = document.createElement("button"); prev.textContent = "‹";
+  const next = document.createElement("button"); next.textContent = "›";
+  const lab = document.createElement("span"); lab.className = "label";
+  lab.textContent = fmtRange(start) + (weekOffset === 0 ? "  (this week)" : "");
+  prev.onclick = () => { weekOffset--; render(); };
+  next.onclick = () => { weekOffset++; render(); };
+  const todayBtn = document.createElement("button");
+  todayBtn.textContent = "Today"; todayBtn.style.width = "auto"; todayBtn.style.padding = "0 12px";
+  todayBtn.onclick = () => { weekOffset = 0; render(); };
+  nav.appendChild(prev); nav.appendChild(next); nav.appendChild(lab);
+  if (weekOffset !== 0) nav.appendChild(todayBtn);
+  card.appendChild(nav);
+
+  const table = document.createElement("table");
+  table.className = "habit-table";
+  const thead = document.createElement("thead");
+  let head = `<tr><th class="name">Habit</th>`;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    head += `<th>${DOW[i]}<br><span style="color:var(--line)">${d.getDate()}</span></th>`;
+  }
+  head += `<th>Streak</th><th></th></tr>`;
+  thead.innerHTML = head;
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  state.habits.forEach((h, idx) => {
+    const tr = document.createElement("tr");
+    const nameTd = document.createElement("td");
+    nameTd.className = "name";
+    const nameInp = document.createElement("input");
+    nameInp.className = "habit-name-input";
+    nameInp.placeholder = "Name a habit…";
+    nameInp.value = h.name || "";
+    nameInp.oninput = () => { h.name = nameInp.value; save(); };
+    nameTd.appendChild(nameInp);
+    tr.appendChild(nameTd);
+
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(start, i);
+      const iso = toISO(d);
+      const td = document.createElement("td");
+      const cell = document.createElement("div");
+      cell.className = "hcell" + (h.days[iso] ? " on" : "");
+      cell.onclick = () => {
+        if (h.days[iso]) delete h.days[iso]; else h.days[iso] = true;
+        save(); render();
+      };
+      td.appendChild(cell);
+      tr.appendChild(td);
+    }
+    const streakTd = document.createElement("td");
+    streakTd.className = "habit-streak";
+    streakTd.textContent = currentStreak(h) > 0 ? currentStreak(h) + "🔥" : "—";
+    tr.appendChild(streakTd);
+
+    const delTd = document.createElement("td");
+    const del = document.createElement("button");
+    del.className = "row-del"; del.innerHTML = "✕"; del.title = "Remove habit";
+    del.onclick = () => { state.habits.splice(idx, 1); save(); render(); };
+    delTd.appendChild(del);
+    tr.appendChild(delTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  card.appendChild(table);
+
+  const add = document.createElement("button");
+  add.className = "add-btn";
+  add.textContent = "+ Add habit";
+  add.onclick = () => { state.habits.push({ id: uid(), name: "", days: {} }); save(); render(); };
+  card.appendChild(add);
+  view.appendChild(card);
+}
+
+function currentStreak(h) {
+  let count = 0;
+  let d = new Date();
+  // if today not done, start from yesterday so an ongoing streak still shows
+  if (!h.days[toISO(d)]) d = addDays(d, -1);
+  while (h.days[toISO(d)]) { count++; d = addDays(d, -1); }
+  return count;
+}
+
+/* ---------------- Today ---------------- */
+function renderToday(view) {
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 18 ? "Good afternoon" : "Good evening";
+  const banner = document.createElement("div");
+  banner.className = "card";
+  banner.style.background = "linear-gradient(135deg, #6b8f71, #5e7fa3)";
+  banner.style.color = "#fff";
+  banner.style.border = "none";
+  banner.innerHTML = `<div style="font-size:13px;opacity:.85;font-weight:600">${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
+    <div style="font-size:22px;font-weight:700;margin-top:2px">${greeting}.</div>
+    ${state.quarterTheme ? `<div style="margin-top:8px;font-size:14px;opacity:.9">Quarter theme: <strong>${escapeHtml(state.quarterTheme)}</strong></div>` : ''}`;
+  view.appendChild(banner);
+
+  const grid = document.createElement("div");
+  grid.className = "grid cols-2";
+  grid.style.marginTop = "16px";
+
+  // daily goals quick view
+  grid.appendChild(goalCard("Today's goals", "daily", "", "Your focus for today."));
+
+  // today's habits
+  const hcard = document.createElement("div");
+  hcard.className = "card";
+  hcard.innerHTML = `<h2>Today's habits <span class="tag">${today()}</span></h2><p class="hint">Tap to check off. Manage them in the Habits tab.</p>`;
+  if (state.habits.length === 0) {
+    const p = document.createElement("p");
+    p.style.color = "var(--muted)"; p.style.fontSize = "14px";
+    p.innerHTML = `No habits yet. <a href="#" id="goHabits" style="color:var(--accent);font-weight:600">Add some →</a>`;
+    hcard.appendChild(p);
+    setTimeout(() => { document.getElementById("goHabits").onclick = (e) => { e.preventDefault(); activeTab="habits"; render(); }; }, 0);
+  } else {
+    const ul = document.createElement("ul");
+    ul.className = "goal-list";
+    const iso = today();
+    state.habits.forEach(h => {
+      const li = document.createElement("li");
+      li.className = "goal-item" + (h.days[iso] ? " done" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = !!h.days[iso];
+      cb.onchange = () => { if (cb.checked) h.days[iso]=true; else delete h.days[iso]; save(); renderToday(clearView(view)); };
+      const span = document.createElement("span");
+      span.className = "text";
+      span.style.whiteSpace = "normal";
+      span.textContent = h.name || "(unnamed habit)";
+      const streak = document.createElement("span");
+      streak.className = "habit-streak";
+      streak.textContent = currentStreak(h) > 0 ? currentStreak(h)+"🔥" : "";
+      li.appendChild(cb); li.appendChild(span); li.appendChild(streak);
+      ul.appendChild(li);
+    });
+    hcard.appendChild(ul);
+  }
+  grid.appendChild(hcard);
+  view.appendChild(grid);
+
+  // weekly reflection
+  const refl = document.createElement("div");
+  refl.className = "card";
+  refl.style.marginTop = "16px";
+  refl.innerHTML = `<h2>Quick reflection <span class="tag blue">check-in</span></h2><p class="hint">A couple of lines is plenty. Updated whenever you like.</p>`;
+  refl.appendChild(makeNotesField("A win recently…", "weekWin"));
+  refl.appendChild(makeNotesField("Something to improve…", "weekImprove"));
+  view.appendChild(refl);
+}
+function clearView(view) { view.innerHTML = ""; return view; }
+function makeNotesField(label, key) {
+  const wrap = document.createElement("div");
+  wrap.style.marginBottom = "12px";
+  const l = document.createElement("label"); l.className = "field"; l.textContent = label;
+  const ta = document.createElement("textarea");
+  ta.className = "notes"; ta.value = state.reflections[key] || "";
+  ta.oninput = () => { state.reflections[key] = ta.value; save(); };
+  wrap.appendChild(l); wrap.appendChild(ta);
+  return wrap;
+}
+
+/* ---------------- Life Audit ---------------- */
+function renderAudit(view) {
+  const intro = document.createElement("div");
+  intro.className = "card";
+  intro.innerHTML = `<h2>Life Audit <span class="tag">${state.auditDate || today()}</span></h2>
+    <p class="hint">Rate each area 1–10 on how satisfied you feel right now. Honesty beats optimism. Re-do it each quarter to see what shifts.</p>`;
+  const dateRow = document.createElement("div");
+  dateRow.innerHTML = `<label class="field">Date of this audit</label>`;
+  const dInp = document.createElement("input");
+  dInp.type = "date"; dInp.className = "pill-input";
+  dInp.value = state.auditDate || today();
+  dInp.onchange = () => { state.auditDate = dInp.value; save(); };
+  dateRow.appendChild(dInp);
+  intro.appendChild(dateRow);
+  view.appendChild(intro);
+
+  // Wheel of life
+  const wheelCard = document.createElement("div");
+  wheelCard.className = "card";
+  wheelCard.style.marginTop = "16px";
+  wheelCard.innerHTML = `<h2>Wheel of Life</h2><p class="hint">A snapshot of balance across every dimension. Fuller = more satisfied.</p>`;
+  const wrap = document.createElement("div");
+  wrap.className = "wheel-wrap";
+  wrap.appendChild(drawWheel());
+  wheelCard.appendChild(wrap);
+  view.appendChild(wheelCard);
+
+  state.audit.forEach((area, ai) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.marginTop = "16px";
+    const avg = areaAvg(area);
+    const header = document.createElement("div");
+    header.className = "area-header";
+    header.innerHTML = `<h2 style="color:${area.color}">${escapeHtml(area.area)}</h2>
+      <span class="area-avg">avg ${avg ? avg.toFixed(1) : "—"} / 10</span>`;
+    card.appendChild(header);
+
+    area.items.forEach((item, ii) => {
+      const row = document.createElement("div");
+      row.className = "audit-row";
+      const lab = document.createElement("div");
+      lab.className = "audit-label";
+      const nm = document.createElement("div"); nm.className = "name"; nm.textContent = item.name;
+      const note = document.createElement("input");
+      note.className = "note"; note.placeholder = "note (optional)…"; note.value = item.note || "";
+      note.oninput = () => { item.note = note.value; save(); };
+      lab.appendChild(nm); lab.appendChild(note);
+
+      const rating = document.createElement("div");
+      rating.className = "rating";
+      for (let n = 1; n <= 10; n++) {
+        const dot = document.createElement("div");
+        dot.className = "dot" + (item.score >= n ? " filled" : "");
+        dot.style.setProperty("--score-color", area.color);
+        dot.title = n;
+        dot.onclick = () => { item.score = (item.score === n ? 0 : n); save(); renderAudit(clearView(view)); };
+        rating.appendChild(dot);
+      }
+      const badge = document.createElement("div");
+      badge.className = "score-badge";
+      badge.textContent = item.score || "–";
+      if (item.score) badge.style.color = area.color;
+
+      row.appendChild(lab); row.appendChild(rating); row.appendChild(badge);
+      card.appendChild(row);
+    });
+    view.appendChild(card);
+  });
+
+  // quarterly review note
+  const rev = document.createElement("div");
+  rev.className = "card";
+  rev.style.marginTop = "16px";
+  rev.innerHTML = `<h2>Quarterly review <span class="tag warm">reflect</span></h2><p class="hint">Looking at the wheel above — what's one area to invest in next quarter, and why?</p>`;
+  const ta = document.createElement("textarea");
+  ta.className = "notes"; ta.style.minHeight = "120px";
+  ta.value = state.reflections.quarterReview || "";
+  ta.oninput = () => { state.reflections.quarterReview = ta.value; save(); };
+  rev.appendChild(ta);
+  view.appendChild(rev);
+}
+
+function areaAvg(area) {
+  const scored = area.items.filter(i => i.score > 0);
+  if (!scored.length) return 0;
+  return scored.reduce((s, i) => s + i.score, 0) / scored.length;
+}
+
+function drawWheel() {
+  const size = 340, cx = size/2, cy = size/2, R = 130;
+  const segs = [];
+  state.audit.forEach(area => area.items.forEach(it => segs.push({ ...it, color: area.color })));
+  const n = segs.length;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+  svg.setAttribute("width", "100%");
+  svg.style.maxWidth = "340px";
+
+  // grid rings
+  for (let r = 1; r <= 5; r++) {
+    const c = document.createElementNS(svg.namespaceURI, "circle");
+    c.setAttribute("cx", cx); c.setAttribute("cy", cy);
+    c.setAttribute("r", R * r / 5);
+    c.setAttribute("fill", "none");
+    c.setAttribute("stroke", "#e7e4df");
+    c.setAttribute("stroke-width", "1");
+    svg.appendChild(c);
+  }
+  const ang = (2 * Math.PI) / n;
+  function pt(i, rad) { const a = i * ang - Math.PI/2; return [cx + Math.cos(a)*rad, cy + Math.sin(a)*rad]; }
+
+  // spokes
+  for (let i = 0; i < n; i++) {
+    const [x, y] = pt(i, R);
+    const line = document.createElementNS(svg.namespaceURI, "line");
+    line.setAttribute("x1", cx); line.setAttribute("y1", cy);
+    line.setAttribute("x2", x); line.setAttribute("y2", y);
+    line.setAttribute("stroke", "#e7e4df"); line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+  }
+  // wedges
+  for (let i = 0; i < n; i++) {
+    const val = segs[i].score || 0;
+    if (val === 0) continue;
+    const rad = R * val / 10;
+    const a0 = i * ang - Math.PI/2 - ang/2;
+    const a1 = i * ang - Math.PI/2 + ang/2;
+    const x0 = cx + Math.cos(a0)*rad, y0 = cy + Math.sin(a0)*rad;
+    const x1 = cx + Math.cos(a1)*rad, y1 = cy + Math.sin(a1)*rad;
+    const path = document.createElementNS(svg.namespaceURI, "path");
+    path.setAttribute("d", `M ${cx} ${cy} L ${x0} ${y0} A ${rad} ${rad} 0 0 1 ${x1} ${y1} Z`);
+    path.setAttribute("fill", segs[i].color);
+    path.setAttribute("opacity", "0.55");
+    path.setAttribute("stroke", segs[i].color);
+    path.setAttribute("stroke-width", "1");
+    svg.appendChild(path);
+  }
+  return svg;
+}
+
+/* ---------------- Utils ---------------- */
+function escapeHtml(s) { return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------- Footer actions ---------------- */
+document.getElementById("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "life-organized-" + today() + ".json"; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { state = JSON.parse(r.result); save(); render(); alert("Data imported."); }
+    catch (err) { alert("Could not read that file."); }
+  };
+  r.readAsText(file);
+};
+document.getElementById("resetBtn").onclick = () => {
+  if (confirm("Erase everything and start fresh? This can't be undone.")) {
+    state = defaultState(); save(); render();
+  }
+};
+
+/* ---------------- Go ---------------- */
+render();
+</script>
+</body>
+</html>
