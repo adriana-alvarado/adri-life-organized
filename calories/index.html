@@ -171,6 +171,7 @@ function defaultState() {
   return {
     profile: { sex: "female", age: 25, heightCm: 165, weightKg: 54.4, units: "imperial" }, // ~5'5", 120 lb
     profileSet: false,             // has the user entered their own stats yet?
+    weightLog: [],                 // [{ date:"YYYY-MM-DD", kg }] — weight over time
     budget: 1300,
     countResting: true,            // include resting (BMR) burn in the day's total
     reminders: ["08:00", "12:30", "16:00", "19:00"],
@@ -189,6 +190,9 @@ function migrate(s) {
   ["age", "heightCm", "weightKg"].forEach(k => { if (typeof p[k] !== "number" || !isFinite(p[k])) p[k] = d.profile[k]; });
   if (!["imperial", "metric"].includes(p.units)) p.units = "imperial";
   if (typeof s.profileSet !== "boolean") s.profileSet = false;
+  if (!Array.isArray(s.weightLog)) s.weightLog = [];
+  s.weightLog = s.weightLog.filter(e => e && e.date && typeof e.kg === "number").sort((a, b) => a.date < b.date ? -1 : 1);
+  if (s.weightLog.length) s.profile.weightKg = s.weightLog[s.weightLog.length - 1].kg; // current = most recent log
   if (typeof s.budget !== "number") s.budget = d.budget;
   if (typeof s.countResting !== "boolean") s.countResting = true;
   if (!Array.isArray(s.reminders)) s.reminders = d.reminders.slice();
@@ -248,6 +252,19 @@ function runKcal(distanceKm, timeMin) {
 }
 // Calories from steps, scaled by body weight (~net walking).
 function stepsKcal(steps) { return Math.round((steps || 0) * state.profile.weightKg * 0.0004); }
+// Record a weight reading for a date (upsert) and make the latest one "current".
+function logWeight(kg, iso) {
+  iso = iso || today();
+  if (!(kg > 0)) return;
+  const e = state.weightLog.find(x => x.date === iso);
+  if (e) e.kg = kg; else state.weightLog.push({ date: iso, kg });
+  state.weightLog.sort((a, b) => a.date < b.date ? -1 : 1);
+  state.profile.weightKg = state.weightLog[state.weightLog.length - 1].kg;
+}
+function dispWeight(kg) { return state.profile.units === "imperial" ? Math.round(kgToLb(kg) * 10) / 10 + " lb" : Math.round(kg * 10) / 10 + " kg"; }
+function weightUnit() { return state.profile.units === "imperial" ? "lb" : "kg"; }
+function toKgFromInput(v) { return state.profile.units === "imperial" ? lbToKg(v) : v; }
+
 // One-line summary of the stats driving the estimates, e.g. "♀ · 25y · 5'5" · 120 lb · BMR 1289".
 function statsSummaryText() {
   const p = state.profile, imperial = p.units === "imperial";
@@ -314,6 +331,9 @@ function render() {
 
   /* summary + auto burn breakdown */
   main.appendChild(summaryCard(iso, isToday));
+
+  /* weight over time */
+  main.appendChild(weightCard(iso));
 
   /* eat */
   main.appendChild(eatCard(iso, isToday));
@@ -495,7 +515,7 @@ function profileBlock() {
 
   wrap.querySelector("#sex").onchange = e => { p.sex = e.target.value; save(); render(); };
   wrap.querySelector("#age").onchange = e => { p.age = Math.max(10, parseInt(e.target.value) || p.age); save(); render(); };
-  wrap.querySelector("#weight").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.weightKg = imperial ? lbToKg(v) : v; save(); render(); };
+  wrap.querySelector("#weight").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) logWeight(imperial ? lbToKg(v) : v); save(); render(); };
   if (imperial) {
     const hf = wrap.querySelector("#hft"), hi = wrap.querySelector("#hin");
     const seth = () => { p.heightCm = ftInToCm(parseInt(hf.value) || 0, parseInt(hi.value) || 0); save(); render(); };
@@ -519,8 +539,85 @@ function setupCard() {
   const bmrLine = el(`<div class="ok" style="color:var(--blue)">Your resting burn (BMR) works out to ≈ <b>${Math.round(bmr())}</b> kcal/day.</div>`);
   card.appendChild(bmrLine);
   const done = el(`<button class="addbtn" id="setupDone" style="width:100%;margin-top:12px;padding:11px">Save my stats 🍓</button>`);
-  done.onclick = () => { state.profileSet = true; save(); render(); };
+  done.onclick = () => { state.profileSet = true; if (!state.weightLog.length) logWeight(state.profile.weightKg); save(); render(); };
   card.appendChild(done);
+  return card;
+}
+
+// A little SVG trend line of weight over time.
+function sparkline(entries) {
+  const imperial = state.profile.units === "imperial";
+  const pts = entries.slice(-40);
+  if (pts.length < 2) return el(`<div class="mini" style="margin:8px 0">Log a couple of days to see your trend 📈</div>`);
+  const vals = pts.map(e => imperial ? kgToLb(e.kg) : e.kg);
+  const min = Math.min(...vals), max = Math.max(...vals), range = (max - min) || 1;
+  const W = 372, H = 86, pad = 10, padR = 44, padB = 16;
+  const x = i => pad + i * (W - pad - padR) / (pts.length - 1);
+  const y = v => pad + (1 - (v - min) / range) * (H - pad - padB);
+  const line = vals.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+  const area = `M${x(0).toFixed(1)} ${(H - padB).toFixed(1)} ` + vals.map((v, i) => "L" + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ") + ` L${x(pts.length - 1).toFixed(1)} ${(H - padB).toFixed(1)} Z`;
+  const dots = vals.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="${i === pts.length - 1 ? 4 : 2.4}" fill="${i === pts.length - 1 ? "#ff2e8f" : "#b06cf0"}" stroke="#3a2b3f" stroke-width="${i === pts.length - 1 ? 1.6 : 0}"/>`).join("");
+  const lastLbl = (Math.round(vals[vals.length - 1] * 10) / 10);
+  const u = imperial ? "lb" : "kg";
+  return el(`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:6px 0 2px;overflow:visible">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd1e8"/><stop offset="1" stop-color="#ffd1e8" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#wg)"/>
+    <path d="${line}" fill="none" stroke="#ff5ca8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${W - padR + 6}" y="${(y(max) + 4).toFixed(1)}" font-size="10" font-weight="800" fill="#a87fb0">${Math.round(max * 10) / 10}</text>
+    <text x="${W - padR + 6}" y="${(y(min) + 4).toFixed(1)}" font-size="10" font-weight="800" fill="#a87fb0">${Math.round(min * 10) / 10}</text>
+    <text x="${x(pts.length - 1).toFixed(1)}" y="${(y(vals[vals.length - 1]) - 8).toFixed(1)}" font-size="10.5" font-weight="800" fill="#ff2e8f" text-anchor="end">${lastLbl} ${u}</text>
+  </svg>`);
+}
+
+function weightCard(iso) {
+  const log = state.weightLog;
+  const card = el(`<div class="card"><h2>⚖️ Weight</h2></div>`);
+
+  if (log.length) {
+    const cur = log[log.length - 1], first = log[0];
+    const diffKg = cur.kg - first.kg;
+    const diffDisp = state.profile.units === "imperial" ? Math.round(kgToLb(Math.abs(diffKg)) * 10) / 10 : Math.round(Math.abs(diffKg) * 10) / 10;
+    const arrow = diffKg < -0.05 ? "▼" : diffKg > 0.05 ? "▲" : "■";
+    const col = diffKg < -0.05 ? "var(--green)" : diffKg > 0.05 ? "var(--warm)" : "var(--muted)";
+    const head = el(`<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:2px">
+      <span style="font-family:'Baloo 2',cursive;font-weight:800;font-size:34px;line-height:.9;color:var(--accent)">${dispWeight(cur.kg)}</span>
+      ${log.length > 1 ? `<span style="font-size:12.5px;font-weight:800;color:${col};padding-bottom:5px">${arrow} ${diffDisp} ${weightUnit()} since ${new Date(first.date + "T00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>` : ""}
+    </div>`);
+    card.appendChild(head);
+    card.appendChild(sparkline(log));
+  } else {
+    card.appendChild(el(`<p class="hint">No weigh-ins yet — log your first below to start your trend.</p>`));
+  }
+
+  // log a weigh-in (defaults to the day you're viewing)
+  card.appendChild(el(`<div class="sublbl">Log a weigh-in</div>`));
+  const def = log.find(e => e.date === iso);
+  const row = el(`<div class="addrow">
+    <input class="t" id="wDate" type="date" value="${iso}" max="${today()}" style="width:auto" />
+    <input class="t k" id="wVal" type="number" inputmode="decimal" step="0.1" placeholder="${weightUnit()}" value="${def ? (state.profile.units === "imperial" ? Math.round(kgToLb(def.kg) * 10) / 10 : Math.round(def.kg * 10) / 10) : ""}" />
+    <button class="addbtn" id="wAdd">Log</button>
+  </div>`);
+  card.appendChild(row);
+  const wDate = row.querySelector("#wDate"), wVal = row.querySelector("#wVal");
+  const doLog = () => { const v = parseFloat(wVal.value); if (!(v > 0)) { wVal.focus(); return; } logWeight(toKgFromInput(v), wDate.value || today()); save(); render(); };
+  row.querySelector("#wAdd").onclick = doLog;
+  wVal.onkeydown = e => { if (e.key === "Enter") doLog(); };
+
+  // recent entries (newest first)
+  if (log.length) {
+    const ul = el(`<ul class="items"></ul>`);
+    log.slice().reverse().slice(0, 8).forEach(e => {
+      const li = el(`<li><span class="ic">⚖️</span><span class="nm">${new Date(e.date + "T00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span><span class="kc">${dispWeight(e.kg)}</span><button class="del">✕</button></li>`);
+      li.querySelector(".del").onclick = () => {
+        state.weightLog = state.weightLog.filter(x => x.date !== e.date);
+        if (state.weightLog.length) state.profile.weightKg = state.weightLog[state.weightLog.length - 1].kg;
+        save(); render();
+      };
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+  }
   return card;
 }
 

@@ -31,7 +31,15 @@ Set the times you want a nudge in ⚙️ Settings and turn reminders on. At each
 
 The very first time you open the app, a **“Let's set up your numbers”** card asks for your **sex, age, height, and weight** (toggle imperial/metric) and your daily budget. The moment you enter them, every burn estimate becomes yours — your BMR is shown right there as you type.
 
-After that, the summary always shows a **“📐 from your stats: ♀ · 25y · 5'5" · 120 lb · BMR 1289 — tap to edit”** line, so it's clear the numbers come from your data. Tap it (or the ⚙️ gear) anytime to update your weight, etc., and all the calculations refresh instantly. Everything is saved locally on this device only.
+After that, the summary always shows a **“📐 from your stats: ♀ · 25y · 5'5" · 120 lb · BMR 1289 — tap to edit”** line, so it's clear the numbers come from your data. Tap it (or the ⚙️ gear) anytime to update your **height and weight**, and all the calculations refresh instantly. Everything is saved locally on this device only.
+
+## ⚖️ Weight over time
+
+A dedicated **Weight** card lets you log a weigh-in for any date and watch your trend on a little chart:
+- Shows your **current weight** and the change since your first entry (▼ down / ▲ up).
+- A **sparkline** of your last 40 weigh-ins.
+- Log a reading with a **date picker** (defaults to the day you're viewing), and delete any entry.
+- Your **most recent weigh-in becomes your current weight**, so it automatically updates BMR, run, and step estimates. Editing weight in Settings logs today's reading too.
 
 ## Note
 
