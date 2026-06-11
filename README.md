@@ -8,13 +8,16 @@ Just open `index.html` in any browser (double-click the file). There's nothing t
 
 ## What's inside
 
-- **Today** — a daily dashboard: today's goals, today's habits to check off, a quick reflection space, and your current **level + XP bar**.
-- **Goals** — separate lists for **daily**, **weekly**, **monthly**, and **quarterly** goals, plus a quarter "theme" to anchor the next 90 days. Check items off as you complete them. All empty for you to fill in.
+- **Today** — a daily dashboard: a "🧭 pick up here" breadcrumb, your targets at a glance, today's goals and habits, a quick reflection space, and your current **level + XP bar**.
+- **Goals** — separate lists for **daily**, **weekly**, **monthly**, and **quarterly** goals, pre-filled with your real plan (running, classes, robotics, CSWA), plus a quarter "theme." Check items off as you go; edit or add freely.
+- **Targets** — your measurable goals with progress bars: longest run → 10k (with a 5k milestone), fastest mile → 8:00, body weight → 115 lbs, pull-ups → 1, Instagram → 700 followers, 2 new posts, 5 new friends. Set a **start** and update **now** as you progress; hit 100% for +120 XP.
+- **Summer Roadmap** — your ROS2 + CSWA plan as checkable phases (foundations → simulation → build → polish, plus the CSWA track), a **"pick up here" breadcrumb** for ending each session with "next: do X", and the **definition of done** for end of August.
 - **Habits** — a weekly habit grid. Add the habits you want to build, click a square per day, and watch your 🔥 streak grow. Navigate between weeks with the arrows.
 - **Life Audit** — rate your satisfaction 1–10 across three areas:
   - Health & Fitness
   - Career & Finances
   - Personal Growth & Fun
+  - Social & Community
 
   A **Wheel of Life** visualizes your balance at a glance, and a quarterly review box prompts you to pick what to invest in next. Tap **Save snapshot** to record the audit on a date so you can track it over time.
 - **Progress** — your gamified dashboard:

@@ -235,6 +235,10 @@
   /* Wheel */
   .wheel-wrap { display: flex; justify-content: center; padding: 10px 0; }
 
+  /* Target / progress bars */
+  .tbar { height: 14px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .tfill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
   /* Gamification */
   .level-card {
     background: linear-gradient(135deg, #2b2b2b, #3c3a44);
@@ -378,28 +382,147 @@ function load() {
   return defaultState();
 }
 function defaultState() {
-  return {
+  const s = {
     goals: { daily: [], weekly: [], monthly: [], quarterly: [] },
     habits: [],          // { id, name, days: { "2026-06-10": true } }
+    targets: [],         // measurable goals with progress bars
+    roadmap: null,       // summer skills plan
     audit: auditDefaults(),
     auditDate: today(),
     quarterTheme: "",
     reflections: { weekWin: "", weekImprove: "", quarterReview: "" },
     auditHistory: [],    // [{ date, areas: {name: avg}, overall }]
-    gamification: { lastSeenLevel: 1 }
+    gamification: { lastSeenLevel: 1 },
+    seeded: false
+  };
+  seedContent(s);
+  return s;
+}
+
+// Pre-fill Adri's real goals, targets, habits and summer roadmap.
+// Only touches empty slots so it never clobbers work already in progress.
+function seedContent(s) {
+  if (s.seeded) return;
+  const g = t => ({ text: t, done: false });
+  if (!s.goals.daily.length) s.goals.daily = [
+    g("Robotics: one atomic ROS2 task — leave a breadcrumb at the end"),
+    g("CSWA: one practice section"),
+    g("Movement: run, pilates, or strength"),
+    g("Pull-up practice (negatives / band)")
+  ];
+  if (!s.goals.weekly.length) s.goals.weekly = [
+    g("Run 3x this week"),
+    g("Robotics ~7 hrs (1 hr/day)"),
+    g("CSWA practice 1 hr/day"),
+    g("Reach out to 1 new person / say yes to 1 social thing")
+  ];
+  if (!s.goals.monthly.length) s.goals.monthly = [
+    g("Get ROS2 environment installed (weekend setup block)"),
+    g("Finish ROS2 beginner tutorials: nodes, topics, services"),
+    g("Sign up for a running club + first session"),
+    g("Book a pilates intro class"),
+    g("Post 2x on Instagram")
+  ];
+  if (!s.goals.quarterly.length) s.goals.quarterly = [
+    g("Join a running club + start pilates"),
+    g("Try a beginner hip-hop or salsa class"),
+    g("Earn CSWA certification"),
+    g("Ship a simulated ROS2 robot project on public GitHub"),
+    { text: "Land a summer internship", done: true }
+  ];
+  if (!s.habits.length) s.habits = [
+    { id: uid(), name: "Robotics — 1 hr (ROS2)", days: {} },
+    { id: uid(), name: "CSWA — 1 hr practice", days: {} },
+    { id: uid(), name: "Movement (run / pilates / strength)", days: {} },
+    { id: uid(), name: "Pull-up practice", days: {} },
+    { id: uid(), name: "Post or engage on Instagram", days: {} },
+    { id: uid(), name: "Reach out to someone", days: {} }
+  ];
+  if (!s.targets.length) s.targets = [
+    { id: uid(), icon: "🏅", name: "Longest non-stop run", unit: "km", type: "number", start: null, current: null, target: 10, mid: 5, note: "5k milestone, then 10k" },
+    { id: uid(), icon: "🏃", name: "Fastest mile", unit: "min/mile", type: "time", start: null, current: null, target: 480 },
+    { id: uid(), icon: "⚖️", name: "Body weight", unit: "lbs", type: "number", start: null, current: null, target: 115 },
+    { id: uid(), icon: "💪", name: "Pull-ups in a row", unit: "reps", type: "number", start: 0, current: 0, target: 1 },
+    { id: uid(), icon: "📸", name: "Instagram followers", unit: "followers", type: "number", start: null, current: null, target: 700 },
+    { id: uid(), icon: "📝", name: "New posts this season", unit: "posts", type: "number", start: 0, current: 0, target: 2 },
+    { id: uid(), icon: "🤝", name: "New friends", unit: "friends", type: "number", start: 0, current: 0, target: 5 }
+  ];
+  if (!s.roadmap) s.roadmap = defaultRoadmap();
+  if (!s.quarterTheme) s.quarterTheme = "Build daily, finish small.";
+  s.seeded = true;
+}
+
+function defaultRoadmap() {
+  const t = x => ({ text: x, done: false });
+  return {
+    breadcrumb: "",
+    headline: "Realistic win by end of August: solid ROS2 fundamentals + one simple simulated robot project on GitHub. That's plenty. Daily and consistent IS the good way — scope stays honest.",
+    phases: [
+      { title: "Phase 1 · ROS2 foundations", dates: "Weeks 1–3 · mid–late June", tasks: [
+        t("Batch the painful install into a weekend block"),
+        t("Set up Ubuntu + current ROS2 LTS (check docs.ros.org for Humble/Jazzy)"),
+        t("Official beginner tutorials: nodes, topics, services, parameters"),
+        t("Write your own publisher/subscriber in Python (rclpy)"),
+        t("Type every tutorial, run it, then change one thing")
+      ]},
+      { title: "Phase 2 · Simulation + project kickoff", dates: "Weeks 4–6 · early–mid July", tasks: [
+        t("Learn Gazebo basics + URDF"),
+        t("Drive TurtleBot3 in simulation (modify a working robot)"),
+        t("Pick a tiny project: obstacle-avoider or drive-to-goal"),
+        t("Set up public GitHub repo on day one — README, commit often")
+      ]},
+      { title: "Phase 3 · Build the behavior", dates: "Weeks 7–9 · late July–mid Aug", tasks: [
+        t("Read sensor data (e.g. laser scan)"),
+        t("Run a simple control loop"),
+        t("Command motion — make it do something autonomous"),
+        t("Expect debugging to eat sessions — that's where the learning is")
+      ]},
+      { title: "Phase 4 · Polish + (stretch) your edge", dates: "Week 10 · late Aug", tasks: [
+        t("Clean README + short demo GIF/video + 'what I learned'"),
+        t("Capture internship brag-doc entries while specifics are fresh"),
+        t("STRETCH: tests + GitHub Actions CI + Dockerfile (only if it works)")
+      ]},
+      { title: "Parallel track · CSWA", dates: "1 hr/day · separate slot", tasks: [
+        t("Official SolidWorks certification prep"),
+        t("Practice exams (best predictor of the real test)"),
+        t("Keep it in a separate daily slot from ROS2")
+      ]}
+    ],
+    done: [
+      t("ROS2 fundamentals: write nodes, use topics/services, read sensor data"),
+      t("One small simulated robot project, public on GitHub, does something autonomous"),
+      t("CSWA earned"),
+      t("A few crisp internship accomplishments written down"),
+      t("(Stretch) tests + CI + Docker on the repo")
+    ]
   };
 }
+
 // Ensure older saved data has every field this version expects.
 function migrate(s) {
   if (!s.goals) s.goals = {};
   ["daily", "weekly", "monthly", "quarterly"].forEach(k => { if (!Array.isArray(s.goals[k])) s.goals[k] = []; });
   if (!Array.isArray(s.habits)) s.habits = [];
-  if (!Array.isArray(s.audit)) s.audit = auditDefaults();
+  if (!Array.isArray(s.targets)) s.targets = [];
+  if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
+  ensureSocialArea(s);
   if (!s.reflections) s.reflections = { weekWin: "", weekImprove: "", quarterReview: "" };
   if (!Array.isArray(s.auditHistory)) s.auditHistory = [];
   if (!s.gamification) s.gamification = { lastSeenLevel: 1 };
   if (s.gamification.lastSeenLevel == null) s.gamification.lastSeenLevel = 1;
+  seedContent(s); // fills any still-empty sections with Adri's plan
   return s;
+}
+function ensureSocialArea(s) {
+  if (!Array.isArray(s.audit)) return;
+  if (!s.audit.some(a => a.area === "Social & Community")) {
+    s.audit.push({ area: "Social & Community", color: "#8a6fa3", items: [
+      { name: "Friendships", score: 0, note: "" },
+      { name: "Social life & fun", score: 0, note: "" },
+      { name: "Community & belonging", score: 0, note: "" },
+      { name: "Confidence reaching out", score: 0, note: "" }
+    ]});
+  }
 }
 function auditDefaults() {
   return [
@@ -420,6 +543,12 @@ function auditDefaults() {
       { name: "Hobbies & creativity", score: 0, note: "" },
       { name: "Mental health", score: 0, note: "" },
       { name: "Fun & recreation", score: 0, note: "" }
+    ]},
+    { area: "Social & Community", color: "#8a6fa3", items: [
+      { name: "Friendships", score: 0, note: "" },
+      { name: "Social life & fun", score: 0, note: "" },
+      { name: "Community & belonging", score: 0, note: "" },
+      { name: "Confidence reaching out", score: 0, note: "" }
     ]}
   ];
 }
@@ -455,7 +584,9 @@ function uid() { return Math.random().toString(36).slice(2, 9); }
 const TABS = [
   { id: "today", label: "Today" },
   { id: "goals", label: "Goals" },
+  { id: "targets", label: "Targets" },
   { id: "habits", label: "Habits" },
+  { id: "roadmap", label: "Summer Roadmap" },
   { id: "audit", label: "Life Audit" },
   { id: "progress", label: "Progress" }
 ];
@@ -484,7 +615,9 @@ function render() {
   main.appendChild(view);
   if (activeTab === "today") renderToday(view);
   if (activeTab === "goals") renderGoals(view);
+  if (activeTab === "targets") renderTargets(view);
   if (activeTab === "habits") renderHabits(view);
+  if (activeTab === "roadmap") renderRoadmap(view);
   if (activeTab === "audit") renderAudit(view);
   if (activeTab === "progress") renderProgress(view);
   checkLevelUp();
@@ -686,6 +819,38 @@ function renderToday(view) {
       <div style="font-size:12px;opacity:.85;white-space:nowrap">${_next - _xp} XP to L${_L + 1}</div>
     </div>`;
   view.appendChild(banner);
+
+  // Breadcrumb — where to pick up on the robotics work
+  if (state.roadmap && state.roadmap.breadcrumb && state.roadmap.breadcrumb.trim()) {
+    const crumb = document.createElement("div");
+    crumb.className = "card";
+    crumb.style.cssText = "margin-top:16px;border-color:var(--accent);background:var(--accent-soft)";
+    crumb.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em">🧭 Pick up here</div>
+      <div style="font-size:15px;margin-top:4px">${escapeHtml(state.roadmap.breadcrumb)}</div>`;
+    crumb.onclick = () => { activeTab = "roadmap"; render(); };
+    crumb.style.cursor = "pointer";
+    view.appendChild(crumb);
+  }
+
+  // Targets snapshot
+  if ((state.targets || []).length) {
+    const tcard = document.createElement("div");
+    tcard.className = "card"; tcard.style.marginTop = "16px";
+    tcard.innerHTML = `<h2>Targets at a glance <span class="tag">progress</span></h2>`;
+    (state.targets).forEach(t => {
+      const pct = Math.round(targetProgress(t) * 100);
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:10px;margin:9px 0";
+      row.innerHTML = `<span style="font-size:16px">${t.icon || "🎯"}</span>
+        <span style="flex:0 0 130px;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.name || "(unnamed)")}</span>
+        <div class="tbar" style="flex:1;height:10px"><div class="tfill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--blue))"></div></div>
+        <span style="font-size:12px;color:var(--muted);font-weight:700;width:36px;text-align:right">${pct}%</span>`;
+      tcard.appendChild(row);
+    });
+    tcard.style.cursor = "pointer";
+    tcard.onclick = (e) => { if (e.target.tagName !== "INPUT") { activeTab = "targets"; render(); } };
+    view.appendChild(tcard);
+  }
 
   const grid = document.createElement("div");
   grid.className = "grid cols-2";
@@ -913,6 +1078,11 @@ function totalXP() {
   }
   state.habits.forEach(h => { xp += Object.keys(h.days).filter(d => h.days[d]).length * 10; });
   xp += (state.auditHistory || []).length * 40;
+  (state.targets || []).forEach(t => { if (targetProgress(t) >= 1) xp += 120; });
+  if (state.roadmap) {
+    state.roadmap.phases.forEach(p => p.tasks.forEach(t => { if (t.done) xp += 25; }));
+    state.roadmap.done.forEach(t => { if (t.done) xp += 60; });
+  }
   return xp;
 }
 function xpForLevel(L) { return 50 * L * (L - 1); }   // cumulative XP to reach level L
@@ -1136,6 +1306,196 @@ function auditTrendChart(hist) {
   state.audit.forEach(a => line(s => s.areas[a.area] || 0, a.color, 2));
   line(s => s.overall || 0, "#2b2b2b", 3);
   return svg;
+}
+
+/* ---------------- Targets (measurable goals) ---------------- */
+function targetProgress(t) {
+  if (t.start == null || t.current == null || t.target == null) return 0;
+  if (t.target === t.start) return t.current === t.target ? 1 : 0;
+  const p = (t.current - t.start) / (t.target - t.start);
+  return Math.max(0, Math.min(1, p));
+}
+function fmtVal(t, v) {
+  if (v == null || v === "") return "—";
+  return t.type === "time" ? secsToMMSS(v) : v + (t.unit ? " " + t.unit : "");
+}
+function secsToMMSS(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function mmssToSecs(str) {
+  if (str == null || str === "") return null;
+  if (typeof str === "number") return str;
+  const m = String(str).match(/^(\d+):(\d{1,2})$/);
+  if (m) return (+m[1]) * 60 + (+m[2]);
+  const n = parseFloat(str); return isNaN(n) ? null : n;
+}
+
+function renderTargets(view) {
+  const intro = document.createElement("div");
+  intro.className = "card";
+  intro.innerHTML = `<h2>Targets <span class="tag">the numbers</span></h2>
+    <p class="hint">Your measurable goals. Set a <strong>start</strong> (where you are today) and a <strong>now</strong> value, and the bar shows how far you've come. Update “now” whenever you check in — hit 100% for +120 XP.</p>`;
+  view.appendChild(intro);
+
+  const grid = document.createElement("div");
+  grid.className = "grid cols-2";
+  (state.targets || []).forEach((t, idx) => grid.appendChild(targetCard(t, idx)));
+  view.appendChild(grid);
+
+  const add = document.createElement("button");
+  add.className = "add-btn"; add.style.marginTop = "16px";
+  add.textContent = "+ Add a target";
+  add.onclick = () => {
+    state.targets.push({ id: uid(), icon: "🎯", name: "", unit: "", type: "number", start: null, current: null, target: null });
+    save(); render();
+  };
+  view.appendChild(add);
+}
+
+function targetCard(t, idx) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const pct = Math.round(targetProgress(t) * 100);
+  const done = pct >= 100;
+
+  const head = document.createElement("div");
+  head.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:4px";
+  head.innerHTML = `<span style="font-size:22px">${t.icon || "🎯"}</span>`;
+  const nameInp = document.createElement("input");
+  nameInp.className = "habit-name-input";
+  nameInp.style.fontSize = "16px";
+  nameInp.placeholder = "Name this target…";
+  nameInp.value = t.name || "";
+  nameInp.oninput = () => { t.name = nameInp.value; save(); };
+  head.appendChild(nameInp);
+  if (done) { const chk = document.createElement("span"); chk.textContent = "✓ done"; chk.className = "tag"; head.appendChild(chk); }
+  const del = document.createElement("button");
+  del.className = "del"; del.innerHTML = "✕"; del.style.opacity = ".5";
+  del.onclick = () => { state.targets.splice(idx, 1); save(); render(); };
+  head.appendChild(del);
+  card.appendChild(head);
+
+  const bar = document.createElement("div");
+  bar.className = "tbar";
+  bar.innerHTML = `<div class="tfill" style="width:${pct}%;background:${done ? 'var(--accent)' : 'linear-gradient(90deg,var(--accent),var(--blue))'}"></div>`;
+  card.appendChild(bar);
+  const meta = document.createElement("div");
+  meta.style.cssText = "display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:7px 0 14px;font-weight:600";
+  meta.innerHTML = `<span>now: <strong style="color:var(--ink)">${fmtVal(t, t.current)}</strong></span>
+                    <span>${pct}%</span>
+                    <span>goal: <strong style="color:var(--accent)">${fmtVal(t, t.target)}</strong></span>`;
+  card.appendChild(meta);
+  if (t.mid != null && t.target != null) {
+    const ms = document.createElement("div");
+    ms.style.cssText = "font-size:11.5px;color:var(--muted);margin:-8px 0 12px";
+    const reached = t.current != null && ((t.target > t.start) ? t.current >= t.mid : t.current <= t.mid);
+    ms.innerHTML = `${reached ? "✅" : "◻️"} milestone: ${t.mid} ${t.unit}`;
+    card.appendChild(ms);
+  }
+
+  const fields = document.createElement("div");
+  fields.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px";
+  fields.appendChild(targetField(t, "start", "Start"));
+  fields.appendChild(targetField(t, "current", "Now"));
+  fields.appendChild(targetField(t, "target", "Goal"));
+  card.appendChild(fields);
+  return card;
+}
+
+function targetField(t, key, label) {
+  const wrap = document.createElement("div");
+  const l = document.createElement("label"); l.className = "field"; l.textContent = label;
+  const inp = document.createElement("input");
+  inp.className = "pill-input"; inp.style.width = "100%";
+  if (t.type === "time") {
+    inp.placeholder = "mm:ss";
+    inp.value = t[key] == null ? "" : secsToMMSS(t[key]);
+    inp.onchange = () => { t[key] = mmssToSecs(inp.value); save(); render(); };
+  } else {
+    inp.type = "number"; inp.placeholder = "0";
+    inp.value = t[key] == null ? "" : t[key];
+    inp.onchange = () => { const v = inp.value === "" ? null : parseFloat(inp.value); t[key] = v; save(); render(); };
+  }
+  wrap.appendChild(l); wrap.appendChild(inp);
+  return wrap;
+}
+
+/* ---------------- Summer Roadmap ---------------- */
+function renderRoadmap(view) {
+  const rm = state.roadmap;
+  // Breadcrumb — "pick up here"
+  const crumb = document.createElement("div");
+  crumb.className = "card";
+  crumb.style.borderColor = "var(--accent)";
+  crumb.innerHTML = `<h2>🧭 Pick up here <span class="tag">next session</span></h2>
+    <p class="hint">Your own rule: end each session with one line — “next: do X”. Less re-orienting tomorrow.</p>`;
+  const ta = document.createElement("textarea");
+  ta.className = "notes"; ta.style.minHeight = "56px";
+  ta.placeholder = "next: …";
+  ta.value = rm.breadcrumb || "";
+  ta.oninput = () => { rm.breadcrumb = ta.value; save(); };
+  crumb.appendChild(ta);
+  view.appendChild(crumb);
+
+  // Headline / reality check
+  const head = document.createElement("div");
+  head.className = "card";
+  head.style.marginTop = "16px";
+  head.style.background = "var(--accent-soft)";
+  head.style.borderColor = "var(--accent)";
+  head.innerHTML = `<h2>Summer 2026 Skills Roadmap</h2>
+    <p style="margin:0;font-size:14px;color:var(--ink)">${escapeHtml(rm.headline)}</p>`;
+  view.appendChild(head);
+
+  // Phases
+  const totalTasks = rm.phases.reduce((n, p) => n + p.tasks.length, 0);
+  const doneTasks = rm.phases.reduce((n, p) => n + p.tasks.filter(x => x.done).length, 0);
+  const prog = document.createElement("div");
+  prog.className = "card"; prog.style.marginTop = "16px";
+  prog.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Roadmap progress</h2>
+      <span class="area-avg">${doneTasks}/${totalTasks} steps</span></div>
+    <div class="tbar" style="margin-top:12px"><div class="tfill" style="width:${totalTasks ? Math.round(doneTasks/totalTasks*100) : 0}%;background:linear-gradient(90deg,var(--accent),var(--blue))"></div></div>`;
+  view.appendChild(prog);
+
+  rm.phases.forEach(phase => {
+    const card = document.createElement("div");
+    card.className = "card"; card.style.marginTop = "16px";
+    const pdone = phase.tasks.filter(x => x.done).length;
+    card.innerHTML = `<div class="area-header"><h2 style="margin:0">${escapeHtml(phase.title)}</h2>
+      <span class="area-avg">${escapeHtml(phase.dates)}</span></div>`;
+    const ul = document.createElement("ul"); ul.className = "goal-list";
+    phase.tasks.forEach(task => ul.appendChild(checkRow(task, "+25 XP")));
+    card.appendChild(ul);
+    view.appendChild(card);
+  });
+
+  // Definition of done
+  const dod = document.createElement("div");
+  dod.className = "card"; dod.style.marginTop = "16px";
+  dod.innerHTML = `<h2>Definition of done <span class="tag warm">end of August</span></h2>
+    <p class="hint">Hit these and you're a credible robotics-internship candidate when fall apps open.</p>`;
+  const ul2 = document.createElement("ul"); ul2.className = "goal-list";
+  rm.done.forEach(task => ul2.appendChild(checkRow(task, "+60 XP")));
+  dod.appendChild(ul2);
+  view.appendChild(dod);
+}
+
+function checkRow(task, xpLabel) {
+  const li = document.createElement("li");
+  li.className = "goal-item" + (task.done ? " done" : "");
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.checked = task.done;
+  cb.onchange = () => { task.done = cb.checked; save(); render(); };
+  const span = document.createElement("span");
+  span.className = "text"; span.style.whiteSpace = "normal";
+  span.textContent = task.text;
+  li.appendChild(cb); li.appendChild(span);
+  if (xpLabel && !task.done) {
+    const x = document.createElement("span");
+    x.style.cssText = "font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap";
+    x.textContent = xpLabel;
+    li.appendChild(x);
+  }
+  return li;
 }
 
 /* ---------------- Utils ---------------- */
