@@ -46,6 +46,7 @@
   @keyframes floaty { 0%,100% { transform: translateY(0) rotate(var(--r,0deg)); } 50% { transform: translateY(-10px) rotate(var(--r,0deg)); } }
   @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   @keyframes shine { from { background-position: 0 0; } to { background-position: 200% 0; } }
+  @keyframes eq { 0%,100% { height: 30%; } 50% { height: 100%; } }
 
   /* desktop chrome */
   .desktop { min-height: 100vh; padding-bottom: 86px; position: relative; }
@@ -478,6 +479,7 @@ function defaultState() {
     reflections: { weekWin: "", weekImprove: "", quarterReview: "" },
     auditHistory: [],    // [{ date, areas: {name: avg}, overall }]
     gamification: { lastSeenLevel: 1 },
+    music: { url: "", title: "", autoplay: true },
     seeded: false
   };
   seedContent(s);
@@ -719,6 +721,7 @@ function migrate(s) {
   if (!s.reflections) s.reflections = { weekWin: "", weekImprove: "", quarterReview: "" };
   if (!Array.isArray(s.auditHistory)) s.auditHistory = [];
   if (!s.gamification) s.gamification = { lastSeenLevel: 1 };
+  if (!s.music) s.music = { url: "", title: "", autoplay: true };
   if (s.gamification.lastSeenLevel == null) s.gamification.lastSeenLevel = 1;
   seedContent(s); // fills any still-empty sections with Adri's plan
   return s;
@@ -1107,6 +1110,9 @@ function renderToday(view) {
     view.appendChild(tcard);
   }
 
+  // MySpace-style profile song
+  view.appendChild(musicCard());
+
   const grid = document.createElement("div");
   grid.className = "grid cols-2";
   grid.style.marginTop = "16px";
@@ -1163,6 +1169,99 @@ function renderToday(view) {
   view.appendChild(petCard());
 }
 function clearView(view) { view.innerHTML = ""; return view; }
+
+// MySpace-style profile song: paste a YouTube / Spotify / SoundCloud / MP3 link.
+function parseMedia(url) {
+  url = (url || "").trim();
+  if (!url) return null;
+  let m;
+  if ((m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)))
+    return { kind: "youtube", embed: "https://www.youtube.com/embed/" + m[1] + "?rel=0&playsinline=1" };
+  if ((m = url.match(/open\.spotify\.com\/(track|album|playlist|episode)\/([A-Za-z0-9]+)/)))
+    return { kind: "spotify", embed: "https://open.spotify.com/embed/" + m[1] + "/" + m[2] };
+  if (/soundcloud\.com\//.test(url) && /^https?:\/\//.test(url))
+    return { kind: "soundcloud", embed: "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url) + "&color=%23ff5ca8&auto_play=false&hide_related=true&show_comments=false" };
+  if (/^https?:\/\/.+\.(mp3|m4a|ogg|wav|aac)(\?.*)?$/i.test(url))
+    return { kind: "audio", src: url };
+  if (/^https?:\/\//.test(url)) return { kind: "audio", src: url };
+  return { kind: "invalid" };
+}
+
+function musicCard() {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.marginTop = "16px";
+  card.innerHTML = `<h2>Now playing <span class="tag">♫</span></h2>`;
+  const media = parseMedia(state.music && state.music.url);
+
+  if (!media || media.kind === "invalid") {
+    const hint = document.createElement("p");
+    hint.className = "hint";
+    hint.innerHTML = media && media.kind === "invalid"
+      ? "Hmm, couldn't read that link — try a YouTube, Spotify, SoundCloud, or .mp3 URL 💿"
+      : "Paste a YouTube, Spotify, SoundCloud, or MP3 link to set your profile song 💿";
+    card.appendChild(hint);
+    const inp = document.createElement("input");
+    inp.className = "pill-input"; inp.style.width = "100%"; inp.placeholder = "https://…";
+    inp.value = (state.music && state.music.url) || "";
+    const titleInp = document.createElement("input");
+    titleInp.className = "pill-input"; titleInp.style.cssText = "width:100%;margin-top:8px"; titleInp.placeholder = "song + artist (optional)";
+    const btn = document.createElement("button");
+    btn.className = "add-btn"; btn.textContent = "♫ Add my song";
+    btn.onclick = () => { state.music = { url: inp.value.trim(), title: titleInp.value.trim(), autoplay: true }; save(); render(); };
+    card.appendChild(inp); card.appendChild(titleInp); card.appendChild(btn);
+    return card;
+  }
+
+  const wrap = document.createElement("div");
+  if (media.kind === "audio") {
+    const audio = document.createElement("audio");
+    audio.src = media.src; audio.controls = true; audio.loop = true; audio.style.width = "100%";
+    if (state.music.autoplay) audio.autoplay = true;
+    wrap.appendChild(audio);
+  } else {
+    const iframe = document.createElement("iframe");
+    let src = media.embed;
+    if (media.kind === "youtube" && state.music.autoplay) src += "&autoplay=1";
+    iframe.src = src;
+    iframe.width = "100%";
+    iframe.height = media.kind === "spotify" ? "152" : media.kind === "soundcloud" ? "120" : "200";
+    iframe.style.cssText = "border:2.5px solid var(--ink);border-radius:10px;display:block";
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("allow", "autoplay; encrypted-media; clipboard-write; picture-in-picture");
+    iframe.setAttribute("loading", "lazy");
+    wrap.appendChild(iframe);
+  }
+  card.appendChild(wrap);
+
+  const info = document.createElement("div");
+  info.style.cssText = "display:flex;align-items:center;gap:10px;margin-top:12px";
+  info.innerHTML = `<div style="flex:1;font-weight:800;color:var(--ink)">${escapeHtml(state.music.title || "my song")}<br><span style="font-weight:700;color:#a87fb0;font-size:11px">on repeat 💫</span></div>`;
+  const eq = document.createElement("div");
+  eq.style.cssText = "display:flex;align-items:flex-end;gap:3px;height:26px";
+  ["0s", ".2s", ".4s", ".1s", ".35s"].forEach((d, i) => {
+    const b = document.createElement("span");
+    b.style.cssText = `width:4px;height:60%;background:${i % 2 ? "#b06cf0" : "#ff5ca8"};animation:eq .9s ease-in-out infinite ${d}`;
+    eq.appendChild(b);
+  });
+  info.appendChild(eq);
+  card.appendChild(info);
+
+  const ctr = document.createElement("div");
+  ctr.style.cssText = "display:flex;gap:16px;margin-top:12px;align-items:center;flex-wrap:wrap";
+  const change = document.createElement("button");
+  change.className = "add-btn"; change.style.width = "auto"; change.textContent = "change song";
+  change.onclick = () => { state.music = { url: "", title: "", autoplay: true }; save(); render(); };
+  const auto = document.createElement("label");
+  auto.style.cssText = "font-size:12px;font-weight:800;color:#8a5a93;display:flex;align-items:center;gap:6px;cursor:pointer";
+  const ac = document.createElement("input");
+  ac.type = "checkbox"; ac.checked = !!state.music.autoplay;
+  ac.onchange = () => { state.music.autoplay = ac.checked; save(); render(); };
+  auto.appendChild(ac); auto.appendChild(document.createTextNode("autoplay on open"));
+  ctr.appendChild(change); ctr.appendChild(auto);
+  card.appendChild(ctr);
+  return card;
+}
 
 // Tamagotchi-style pet that grows with your level.
 function petCard() {
