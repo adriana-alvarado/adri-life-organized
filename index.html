@@ -469,18 +469,26 @@ function seedContent(s) {
   ];
   if (!s.habits.length) s.habits = defaultHabits();
   if (!s.targets.length) s.targets = [
-    { id: uid(), icon: "🏅", name: "Longest non-stop run", unit: "km", type: "number", start: null, current: null, target: 10, mid: 5, note: "5k milestone, then 10k" },
-    { id: uid(), icon: "🏃", name: "Fastest mile", unit: "min/mile", type: "time", start: null, current: null, target: 480 },
-    { id: uid(), icon: "⚖️", name: "Body weight", unit: "lbs", type: "number", start: null, current: null, target: 115 },
-    { id: uid(), icon: "💪", name: "Pull-ups in a row", unit: "reps", type: "number", start: 0, current: 0, target: 1 },
-    { id: uid(), icon: "📸", name: "Instagram followers", unit: "followers", type: "number", start: null, current: null, target: 700 },
-    { id: uid(), icon: "📝", name: "New posts this season", unit: "posts", type: "number", start: 0, current: 0, target: 2 },
-    { id: uid(), icon: "🤝", name: "New friends", unit: "friends", type: "number", start: 0, current: 0, target: 5 }
+    { id: uid(), icon: "🏅", name: "Longest non-stop run", unit: "km", type: "number", base: "zero", start: null, current: null, target: 10, mid: 5, note: "5k milestone, then 10k" },
+    { id: uid(), icon: "🏃", name: "Fastest mile", unit: "min/mile", type: "time", base: "self", start: null, current: null, target: 480 },
+    { id: uid(), icon: "⚖️", name: "Body weight", unit: "lbs", type: "number", base: "self", start: null, current: null, target: 115 },
+    { id: uid(), icon: "💪", name: "Pull-ups in a row", unit: "reps", type: "number", base: "zero", start: 0, current: 0, target: 1 },
+    { id: uid(), icon: "📸", name: "Instagram followers", unit: "followers", type: "number", base: "zero", start: null, current: null, target: 700 },
+    { id: uid(), icon: "📝", name: "New posts this season", unit: "posts", type: "number", base: "zero", start: 0, current: 0, target: 2 },
+    { id: uid(), icon: "🤝", name: "New friends", unit: "friends", type: "number", base: "zero", start: 0, current: 0, target: 5 }
   ];
   if (!s.roadmap) s.roadmap = defaultRoadmap();
   if (!s.quarterTheme) s.quarterTheme = "Build daily, finish small.";
   s.seeded = true;
   s.habitsV2 = true;
+}
+
+// Assign a tracking 'base' to targets saved before the smarter progress model.
+function migrateTargetsV2(s) {
+  (s.targets || []).forEach(t => {
+    if (t.base) return;
+    t.base = /weight|mile/i.test(t.name || "") ? "self" : "zero";
+  });
 }
 
 function defaultHabits() {
@@ -563,6 +571,7 @@ function migrate(s) {
   if (!Array.isArray(s.habits)) s.habits = [];
   migrateHabitsV2(s);
   if (!Array.isArray(s.targets)) s.targets = [];
+  migrateTargetsV2(s);
   if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
   ensureSocialArea(s);
   refreshAuditColors(s);
@@ -1407,12 +1416,19 @@ function auditTrendChart(hist) {
 }
 
 /* ---------------- Targets (measurable goals) ---------------- */
+// base 'zero' = count-up goals, progress is simply now/goal (e.g. 540/700 followers).
+// base 'self' = improve/reduce goals (weight, mile time), measured from a starting point.
 function targetProgress(t) {
-  if (t.start == null || t.current == null || t.target == null) return 0;
-  if (t.target === t.start) return t.current === t.target ? 1 : 0;
-  const p = (t.current - t.start) / (t.target - t.start);
-  return Math.max(0, Math.min(1, p));
+  if (t.current == null || t.target == null) return 0;
+  if ((t.base || "zero") === "zero") {
+    if (t.target === 0) return t.current === 0 ? 1 : 0;
+    return clamp01(t.current / t.target);
+  }
+  const start = t.start == null ? t.current : t.start;   // fall back to current if no start yet
+  if (start === t.target) return t.current === t.target ? 1 : 0;
+  return clamp01((t.current - start) / (t.target - start));
 }
+function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 function fmtVal(t, v) {
   if (v == null || v === "") return "—";
   return t.type === "time" ? secsToMMSS(v) : v + (t.unit ? " " + t.unit : "");
@@ -1430,7 +1446,7 @@ function renderTargets(view) {
   const intro = document.createElement("div");
   intro.className = "card";
   intro.innerHTML = `<h2>Targets <span class="tag">the numbers</span></h2>
-    <p class="hint">Your measurable goals. Set a <strong>start</strong> (where you are today) and a <strong>now</strong> value, and the bar shows how far you've come. Update “now” whenever you check in — hit 100% for +120 XP.</p>`;
+    <p class="hint">Your measurable goals. Just fill in <strong>Now</strong> — for count-up goals the bar is now ÷ goal (e.g. 540/700 = 77%). For 📉 reduce goals (weight, mile time) it tracks from your starting point. Update “Now” whenever you check in — hit 100% for +120 XP 🎉</p>`;
   view.appendChild(intro);
 
   const grid = document.createElement("div");
@@ -1484,17 +1500,29 @@ function targetCard(t, idx) {
   if (t.mid != null && t.target != null) {
     const ms = document.createElement("div");
     ms.style.cssText = "font-size:11.5px;color:var(--muted);margin:-8px 0 12px";
-    const reached = t.current != null && ((t.target > t.start) ? t.current >= t.mid : t.current <= t.mid);
+    const reached = t.current != null && (t.current >= t.mid);
     ms.innerHTML = `${reached ? "✅" : "◻️"} milestone: ${t.mid} ${t.unit}`;
     card.appendChild(ms);
   }
 
+  const isSelf = (t.base || "zero") === "self";
   const fields = document.createElement("div");
-  fields.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px";
-  fields.appendChild(targetField(t, "start", "Start"));
+  fields.style.cssText = `display:grid;grid-template-columns:${isSelf ? "1fr 1fr 1fr" : "1fr 1fr"};gap:8px`;
+  if (isSelf) fields.appendChild(targetField(t, "start", "Start"));
   fields.appendChild(targetField(t, "current", "Now"));
   fields.appendChild(targetField(t, "target", "Goal"));
   card.appendChild(fields);
+
+  // toggle between count-up and reduce/improve goal
+  const toggle = document.createElement("button");
+  toggle.style.cssText = "margin-top:10px;border:none;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0";
+  toggle.textContent = isSelf ? "📈 switch to count-up goal" : "📉 make this a reduce/improve goal";
+  toggle.onclick = () => {
+    t.base = isSelf ? "zero" : "self";
+    if (t.base === "self" && t.start == null && t.current != null) t.start = t.current;
+    save(); render();
+  };
+  card.appendChild(toggle);
   return card;
 }
 
@@ -1503,14 +1531,19 @@ function targetField(t, key, label) {
   const l = document.createElement("label"); l.className = "field"; l.textContent = label;
   const inp = document.createElement("input");
   inp.className = "pill-input"; inp.style.width = "100%";
+  const afterSet = () => {
+    // for reduce/improve goals, capture the starting point the first time "Now" is filled
+    if (key === "current" && (t.base || "zero") === "self" && t.start == null && t.current != null) t.start = t.current;
+    save(); render();
+  };
   if (t.type === "time") {
     inp.placeholder = "mm:ss";
     inp.value = t[key] == null ? "" : secsToMMSS(t[key]);
-    inp.onchange = () => { t[key] = mmssToSecs(inp.value); save(); render(); };
+    inp.onchange = () => { t[key] = mmssToSecs(inp.value); afterSet(); };
   } else {
     inp.type = "number"; inp.placeholder = "0";
     inp.value = t[key] == null ? "" : t[key];
-    inp.onchange = () => { const v = inp.value === "" ? null : parseFloat(inp.value); t[key] = v; save(); render(); };
+    inp.onchange = () => { const v = inp.value === "" ? null : parseFloat(inp.value); t[key] = v; afterSet(); };
   }
   wrap.appendChild(l); wrap.appendChild(inp);
   return wrap;
