@@ -477,10 +477,28 @@ function seedContent(s) {
     { id: uid(), icon: "📝", name: "New posts this season", unit: "posts", type: "number", base: "zero", start: 0, current: 0, target: 2 },
     { id: uid(), icon: "🤝", name: "New friends", unit: "friends", type: "number", base: "zero", start: 0, current: 0, target: 5 }
   ];
-  if (!s.roadmap) s.roadmap = defaultRoadmap();
+  if (!Array.isArray(s.roadmaps)) s.roadmaps = defaultRoadmaps();
   if (!s.quarterTheme) s.quarterTheme = "Build daily, finish small.";
   s.seeded = true;
   s.habitsV2 = true;
+  s.roadmapsV2 = true;
+}
+
+// Turn the single robotics roadmap into a list of plans (one per goal).
+function migrateRoadmapsV2(s) {
+  if (s.roadmapsV2) return;
+  let plans = Array.isArray(s.roadmaps) ? s.roadmaps : [];
+  if (s.roadmap && !plans.length) {
+    const r = s.roadmap;
+    plans = [{ id: "robotics", icon: "🤖", title: "Robotics + CSWA (summer)",
+               breadcrumb: r.breadcrumb || "", headline: r.headline,
+               phases: r.phases || [], done: r.done || [] }];
+  }
+  const have = new Set(plans.map(p => p.id));
+  defaultRoadmaps().forEach(d => { if (!have.has(d.id)) plans.push(d); });
+  s.roadmaps = plans;
+  delete s.roadmap;
+  s.roadmapsV2 = true;
 }
 
 // Assign a tracking 'base' to targets saved before the smarter progress model.
@@ -521,6 +539,9 @@ function migrateHabitsV2(s) {
 function defaultRoadmap() {
   const t = x => ({ text: x, done: false });
   return {
+    id: "robotics",
+    icon: "🤖",
+    title: "Robotics + CSWA (summer)",
     breadcrumb: "",
     headline: "Realistic win by end of August: solid ROS2 fundamentals + one simple simulated robot project on GitHub. That's plenty. Daily and consistent IS the good way — scope stays honest.",
     phases: [
@@ -564,12 +585,67 @@ function defaultRoadmap() {
   };
 }
 
+// A plan per big goal: each is a checklist of subgoals with its own progress bar.
+function defaultRoadmaps() {
+  const s = x => ({ text: x, done: false });
+  const plan = (id, icon, title, steps) => ({ id, icon, title, steps: steps.map(s) });
+  return [
+    plan("run10k", "🏅", "Run a 10k", [
+      "Build a base: run/walk 3x a week",
+      "Run 1k without stopping",
+      "Run a 5k without stopping 🎉",
+      "Follow a 5k → 10k plan (add ~10% distance/week)",
+      "Long run up to 7k, then 8k",
+      "Run a full 10k 🎉"
+    ]),
+    plan("mile", "⏱️", "Sub-8-minute mile", [
+      "Time your current mile (baseline)",
+      "1 interval session/week (e.g. 4×400m)",
+      "1 tempo run/week",
+      "Re-test the mile every 2–3 weeks",
+      "Break 8:00 🎉"
+    ]),
+    plan("pullup", "💪", "Get a pull-up", [
+      "Dead hangs — build to 30s",
+      "Scapular pulls (shrug-hangs)",
+      "Band-assisted pull-ups",
+      "Negatives: jump up, lower slowly (3–5s)",
+      "First unassisted pull-up 🎉"
+    ]),
+    plan("weight", "🌿", "Reach 115 lbs (feel strong)", [
+      "Pick one weekly weigh-in day (track the trend, not daily)",
+      "Build balanced meals with enough protein",
+      "Daily movement — aim for ~20k steps",
+      "Strength train 2–3x/week",
+      "Be kind to yourself — consistency over perfection 💗"
+    ]),
+    plan("instagram", "📸", "Grow Instagram to 700", [
+      "Clarify your niche / vibe",
+      "Post the 2 you've been meaning to 📝",
+      "Set a posting rhythm (e.g. 2x/week)",
+      "Engage 10 min/day — comment & reply",
+      "Lean into reels + trending audio",
+      "Reach 700 followers 🎉"
+    ]),
+    plan("social", "👯", "Build my social life (5 new friends)", [
+      "Join a running club + show up once",
+      "Start pilates",
+      "Try a beginner hip-hop or salsa class",
+      "Say yes to 1 social invite each week",
+      "Make plans with 1 new person",
+      "5 new friends 🎉"
+    ]),
+    defaultRoadmap()
+  ];
+}
+
 // Ensure older saved data has every field this version expects.
 function migrate(s) {
   if (!s.goals) s.goals = {};
   ["daily", "weekly", "monthly", "quarterly"].forEach(k => { if (!Array.isArray(s.goals[k])) s.goals[k] = []; });
   if (!Array.isArray(s.habits)) s.habits = [];
   migrateHabitsV2(s);
+  migrateRoadmapsV2(s);
   if (!Array.isArray(s.targets)) s.targets = [];
   migrateTargetsV2(s);
   if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
@@ -667,7 +743,7 @@ const TABS = [
   { id: "goals", label: "Goals" },
   { id: "targets", label: "Targets" },
   { id: "habits", label: "Habits" },
-  { id: "roadmap", label: "Summer Roadmap" },
+  { id: "roadmap", label: "Roadmaps" },
   { id: "audit", label: "Life Audit" },
   { id: "progress", label: "Progress" }
 ];
@@ -928,12 +1004,13 @@ function renderToday(view) {
   view.appendChild(banner);
 
   // Breadcrumb — where to pick up on the robotics work
-  if (state.roadmap && state.roadmap.breadcrumb && state.roadmap.breadcrumb.trim()) {
+  const roboPlan = (state.roadmaps || []).find(p => p.id === "robotics");
+  if (roboPlan && roboPlan.breadcrumb && roboPlan.breadcrumb.trim()) {
     const crumb = document.createElement("div");
     crumb.className = "card";
     crumb.style.cssText = "margin-top:16px;border-color:var(--accent);background:var(--accent-soft)";
     crumb.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em">🧭 Pick up here</div>
-      <div style="font-size:15px;margin-top:4px">${escapeHtml(state.roadmap.breadcrumb)}</div>`;
+      <div style="font-size:15px;margin-top:4px">${escapeHtml(roboPlan.breadcrumb)}</div>`;
     crumb.onclick = () => { activeTab = "roadmap"; render(); };
     crumb.style.cursor = "pointer";
     view.appendChild(crumb);
@@ -1186,10 +1263,11 @@ function totalXP() {
   state.habits.forEach(h => { xp += Object.keys(h.days).filter(d => h.days[d]).length * 10; });
   xp += (state.auditHistory || []).length * 40;
   (state.targets || []).forEach(t => { if (targetProgress(t) >= 1) xp += 120; });
-  if (state.roadmap) {
-    state.roadmap.phases.forEach(p => p.tasks.forEach(t => { if (t.done) xp += 25; }));
-    state.roadmap.done.forEach(t => { if (t.done) xp += 60; });
-  }
+  (state.roadmaps || []).forEach(plan => {
+    (plan.steps || []).forEach(t => { if (t.done) xp += 25; });
+    (plan.phases || []).forEach(p => p.tasks.forEach(t => { if (t.done) xp += 25; }));
+    (plan.done || []).forEach(t => { if (t.done) xp += 60; });
+  });
   return xp;
 }
 function xpForLevel(L) { return 50 * L * (L - 1); }   // cumulative XP to reach level L
@@ -1550,64 +1628,144 @@ function targetField(t, key, label) {
 }
 
 /* ---------------- Summer Roadmap ---------------- */
+function planStats(plan) {
+  let done = 0, total = 0;
+  (plan.steps || []).forEach(t => { total++; if (t.done) done++; });
+  (plan.phases || []).forEach(p => p.tasks.forEach(t => { total++; if (t.done) done++; }));
+  (plan.done || []).forEach(t => { total++; if (t.done) done++; });
+  return { done, total };
+}
+
 function renderRoadmap(view) {
-  const rm = state.roadmap;
-  // Breadcrumb — "pick up here"
-  const crumb = document.createElement("div");
-  crumb.className = "card";
-  crumb.style.borderColor = "var(--accent)";
-  crumb.innerHTML = `<h2>🧭 Pick up here <span class="tag">next session</span></h2>
-    <p class="hint">Your own rule: end each session with one line — “next: do X”. Less re-orienting tomorrow.</p>`;
-  const ta = document.createElement("textarea");
-  ta.className = "notes"; ta.style.minHeight = "56px";
-  ta.placeholder = "next: …";
-  ta.value = rm.breadcrumb || "";
-  ta.oninput = () => { rm.breadcrumb = ta.value; save(); };
-  crumb.appendChild(ta);
-  view.appendChild(crumb);
+  const intro = document.createElement("div");
+  intro.className = "card";
+  intro.innerHTML = `<h2>Roadmaps <span class="tag">step by step</span></h2>
+    <p class="hint">Every big goal, broken into doable subgoals. Check them off to fill each bar — daily 🤖 work has its own “pick up here” note. Add your own steps or whole new plans anytime. 🌸</p>`;
+  view.appendChild(intro);
 
-  // Headline / reality check
+  (state.roadmaps || []).forEach((plan, idx) => view.appendChild(planCard(plan, idx)));
+
+  const add = document.createElement("button");
+  add.className = "add-btn"; add.style.marginTop = "16px";
+  add.textContent = "+ Add a new roadmap";
+  add.onclick = () => {
+    state.roadmaps.push({ id: uid(), icon: "⭐", title: "", steps: [{ text: "", done: false }] });
+    save(); render();
+  };
+  view.appendChild(add);
+}
+
+function planCard(plan, idx) {
+  const card = document.createElement("div");
+  card.className = "card"; card.style.marginTop = "16px";
+  const st = planStats(plan);
+  const pct = st.total ? Math.round(st.done / st.total * 100) : 0;
+  const complete = st.total > 0 && st.done === st.total;
+
+  // header: icon + editable title + progress + delete
   const head = document.createElement("div");
-  head.className = "card";
-  head.style.marginTop = "16px";
-  head.style.background = "var(--accent-soft)";
-  head.style.borderColor = "var(--accent)";
-  head.innerHTML = `<h2>Summer 2026 Skills Roadmap</h2>
-    <p style="margin:0;font-size:14px;color:var(--ink)">${escapeHtml(rm.headline)}</p>`;
-  view.appendChild(head);
+  head.style.cssText = "display:flex;align-items:center;gap:10px";
+  head.innerHTML = `<span style="font-size:22px">${plan.icon || "⭐"}</span>`;
+  const titleInp = document.createElement("input");
+  titleInp.className = "habit-name-input";
+  titleInp.style.cssText = "font-size:18px;font-weight:600;font-family:'Fredoka',sans-serif";
+  titleInp.placeholder = "Name this goal…";
+  titleInp.value = plan.title || "";
+  titleInp.oninput = () => { plan.title = titleInp.value; save(); };
+  head.appendChild(titleInp);
+  const badge = document.createElement("span");
+  badge.className = "area-avg"; badge.style.whiteSpace = "nowrap";
+  badge.textContent = complete ? "✨ done!" : `${st.done}/${st.total}`;
+  head.appendChild(badge);
+  const del = document.createElement("button");
+  del.className = "del"; del.innerHTML = "✕"; del.style.opacity = ".5";
+  del.title = "Delete this roadmap";
+  del.onclick = () => { if (confirm("Delete this whole roadmap?")) { state.roadmaps.splice(idx, 1); save(); render(); } };
+  head.appendChild(del);
+  card.appendChild(head);
 
-  // Phases
-  const totalTasks = rm.phases.reduce((n, p) => n + p.tasks.length, 0);
-  const doneTasks = rm.phases.reduce((n, p) => n + p.tasks.filter(x => x.done).length, 0);
-  const prog = document.createElement("div");
-  prog.className = "card"; prog.style.marginTop = "16px";
-  prog.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
-      <h2 style="margin:0">Roadmap progress</h2>
-      <span class="area-avg">${doneTasks}/${totalTasks} steps</span></div>
-    <div class="tbar" style="margin-top:12px"><div class="tfill" style="width:${totalTasks ? Math.round(doneTasks/totalTasks*100) : 0}%;background:linear-gradient(90deg,var(--accent),var(--blue))"></div></div>`;
-  view.appendChild(prog);
+  // progress bar
+  const bar = document.createElement("div");
+  bar.className = "tbar"; bar.style.margin = "12px 0 4px";
+  bar.innerHTML = `<div class="tfill" style="width:${pct}%;background:${complete ? 'var(--accent)' : 'linear-gradient(90deg,var(--accent),var(--blue))'}"></div>`;
+  card.appendChild(bar);
 
-  rm.phases.forEach(phase => {
-    const card = document.createElement("div");
-    card.className = "card"; card.style.marginTop = "16px";
-    const pdone = phase.tasks.filter(x => x.done).length;
-    card.innerHTML = `<div class="area-header"><h2 style="margin:0">${escapeHtml(phase.title)}</h2>
-      <span class="area-avg">${escapeHtml(phase.dates)}</span></div>`;
+  // optional headline (robotics reality-check)
+  if (plan.headline) {
+    const h = document.createElement("p");
+    h.className = "hint"; h.style.marginTop = "10px";
+    h.textContent = plan.headline;
+    card.appendChild(h);
+  }
+
+  // optional breadcrumb (daily "pick up here")
+  if (plan.breadcrumb !== undefined) {
+    const bc = document.createElement("div");
+    bc.style.cssText = "margin:12px 0;padding:12px 14px;border:1.5px solid var(--accent);border-radius:14px;background:var(--accent-soft)";
+    bc.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.03em">🧭 Pick up here — next session</div>`;
+    const ta = document.createElement("textarea");
+    ta.className = "notes"; ta.style.cssText = "min-height:50px;margin-top:8px;background:#fff";
+    ta.placeholder = "next: …";
+    ta.value = plan.breadcrumb || "";
+    ta.oninput = () => { plan.breadcrumb = ta.value; save(); };
+    bc.appendChild(ta);
+    card.appendChild(bc);
+  }
+
+  // phase-based plan (robotics) vs simple step list
+  if (plan.phases) {
+    plan.phases.forEach(phase => {
+      const sec = document.createElement("div");
+      sec.style.marginTop = "10px";
+      sec.innerHTML = `<div class="area-header" style="margin-bottom:0"><h2 style="margin:0;font-size:15px">${escapeHtml(phase.title)}</h2>
+        <span class="area-avg" style="font-size:12px">${escapeHtml(phase.dates)}</span></div>`;
+      const ul = document.createElement("ul"); ul.className = "goal-list";
+      phase.tasks.forEach(task => ul.appendChild(checkRow(task)));
+      sec.appendChild(ul);
+      card.appendChild(sec);
+    });
+    if (plan.done) {
+      const dh = document.createElement("div");
+      dh.style.marginTop = "14px";
+      dh.innerHTML = `<h2 style="font-size:15px;margin:0 0 2px">Definition of done <span class="tag warm">end of Aug</span></h2>`;
+      const ul = document.createElement("ul"); ul.className = "goal-list";
+      plan.done.forEach(task => ul.appendChild(checkRow(task)));
+      dh.appendChild(ul);
+      card.appendChild(dh);
+    }
+  } else {
     const ul = document.createElement("ul"); ul.className = "goal-list";
-    phase.tasks.forEach(task => ul.appendChild(checkRow(task, "+25 XP")));
+    ul.style.marginTop = "10px";
+    (plan.steps || []).forEach((step, si) => ul.appendChild(planStepRow(plan, step, si)));
     card.appendChild(ul);
-    view.appendChild(card);
-  });
+    const addStep = document.createElement("button");
+    addStep.className = "add-btn";
+    addStep.textContent = "+ Add a subgoal";
+    addStep.onclick = () => { plan.steps.push({ text: "", done: false }); save(); render();
+      setTimeout(() => { const tas = ul.parentNode.querySelectorAll(".text"); tas[tas.length-1]?.focus(); }, 0); };
+    card.appendChild(addStep);
+  }
+  return card;
+}
 
-  // Definition of done
-  const dod = document.createElement("div");
-  dod.className = "card"; dod.style.marginTop = "16px";
-  dod.innerHTML = `<h2>Definition of done <span class="tag warm">end of August</span></h2>
-    <p class="hint">Hit these and you're a credible robotics-internship candidate when fall apps open.</p>`;
-  const ul2 = document.createElement("ul"); ul2.className = "goal-list";
-  rm.done.forEach(task => ul2.appendChild(checkRow(task, "+60 XP")));
-  dod.appendChild(ul2);
-  view.appendChild(dod);
+// Editable subgoal row (checkbox + text + delete).
+function planStepRow(plan, step, si) {
+  const li = document.createElement("li");
+  li.className = "goal-item" + (step.done ? " done" : "");
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.checked = step.done;
+  cb.onchange = () => { step.done = cb.checked; save(); render(); };
+  const ta = document.createElement("textarea");
+  ta.className = "text"; ta.rows = 1; ta.placeholder = "Write a subgoal…";
+  ta.value = step.text || "";
+  ta.oninput = () => { step.text = ta.value; autogrow(ta); save(); };
+  ta.onfocus = () => autogrow(ta);
+  const del = document.createElement("button");
+  del.className = "del"; del.innerHTML = "✕"; del.title = "Delete";
+  del.onclick = () => { plan.steps.splice(si, 1); save(); render(); };
+  li.appendChild(cb); li.appendChild(ta); li.appendChild(del);
+  setTimeout(() => autogrow(ta), 0);
+  return li;
 }
 
 function checkRow(task, xpLabel) {
