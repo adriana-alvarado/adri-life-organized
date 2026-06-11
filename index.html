@@ -467,14 +467,7 @@ function seedContent(s) {
     g("Ship a simulated ROS2 robot project on public GitHub"),
     { text: "Land a summer internship", done: true }
   ];
-  if (!s.habits.length) s.habits = [
-    { id: uid(), name: "Robotics — 1 hr (ROS2)", days: {} },
-    { id: uid(), name: "CSWA — 1 hr practice", days: {} },
-    { id: uid(), name: "Movement (run / pilates / strength)", days: {} },
-    { id: uid(), name: "Pull-up practice", days: {} },
-    { id: uid(), name: "Post or engage on Instagram", days: {} },
-    { id: uid(), name: "Reach out to someone", days: {} }
-  ];
+  if (!s.habits.length) s.habits = defaultHabits();
   if (!s.targets.length) s.targets = [
     { id: uid(), icon: "🏅", name: "Longest non-stop run", unit: "km", type: "number", start: null, current: null, target: 10, mid: 5, note: "5k milestone, then 10k" },
     { id: uid(), icon: "🏃", name: "Fastest mile", unit: "min/mile", type: "time", start: null, current: null, target: 480 },
@@ -487,6 +480,34 @@ function seedContent(s) {
   if (!s.roadmap) s.roadmap = defaultRoadmap();
   if (!s.quarterTheme) s.quarterTheme = "Build daily, finish small.";
   s.seeded = true;
+  s.habitsV2 = true;
+}
+
+function defaultHabits() {
+  return [
+    { id: uid(), name: "Study", days: {}, target: null },
+    { id: uid(), name: "CSWA", days: {}, target: null },
+    { id: uid(), name: "Daily exercise", days: {}, target: null },
+    { id: uid(), name: "20k steps", days: {}, target: null },
+    { id: uid(), name: "Journaling", days: {}, target: null },
+    { id: uid(), name: "ROS2", days: {}, target: 2 }
+  ];
+}
+// One-time refresh of the habit list to Adri's current set, carrying over
+// any day history from the matching old habits.
+function migrateHabitsV2(s) {
+  if (s.habitsV2) return;
+  const old = Array.isArray(s.habits) ? s.habits : [];
+  const daysFor = re => { const h = old.find(x => re.test(x.name || "")); return h ? h.days : {}; };
+  s.habits = [
+    { id: uid(), name: "Study", days: {}, target: null },
+    { id: uid(), name: "CSWA", days: daysFor(/cswa/i), target: null },
+    { id: uid(), name: "Daily exercise", days: daysFor(/movement|exercise|workout/i), target: null },
+    { id: uid(), name: "20k steps", days: daysFor(/step/i), target: null },
+    { id: uid(), name: "Journaling", days: daysFor(/journal/i), target: null },
+    { id: uid(), name: "ROS2", days: daysFor(/ros2|robot/i), target: 2 }
+  ];
+  s.habitsV2 = true;
 }
 
 function defaultRoadmap() {
@@ -540,6 +561,7 @@ function migrate(s) {
   if (!s.goals) s.goals = {};
   ["daily", "weekly", "monthly", "quarterly"].forEach(k => { if (!Array.isArray(s.goals[k])) s.goals[k] = []; });
   if (!Array.isArray(s.habits)) s.habits = [];
+  migrateHabitsV2(s);
   if (!Array.isArray(s.targets)) s.targets = [];
   if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
   ensureSocialArea(s);
@@ -754,7 +776,7 @@ function renderHabits(view) {
   const card = document.createElement("div");
   card.className = "card";
   card.innerHTML = `<h2>Habit Tracker <span class="tag">streaks</span></h2>
-    <p class="hint">Click a square to mark a habit done that day. Add the habits you want to build below.</p>`;
+    <p class="hint">Click a square to mark a habit done that day. Set a weekly goal (e.g. ROS2 2×/wk) and the “week” column shows your progress. 🔥 is your daily streak.</p>`;
 
   const start = startOfWeek(addDays(new Date(), weekOffset * 7));
   const nav = document.createElement("div");
@@ -780,7 +802,7 @@ function renderHabits(view) {
     const d = addDays(start, i);
     head += `<th>${DOW[i]}<br><span style="color:var(--line)">${d.getDate()}</span></th>`;
   }
-  head += `<th>Streak</th><th></th></tr>`;
+  head += `<th>Week</th><th>Streak</th><th></th></tr>`;
   thead.innerHTML = head;
   table.appendChild(thead);
 
@@ -810,6 +832,27 @@ function renderHabits(view) {
       td.appendChild(cell);
       tr.appendChild(td);
     }
+    // weekly goal column
+    const wkTd = document.createElement("td");
+    const wkCount = weekDoneCount(h, start);
+    const wkWrap = document.createElement("div");
+    wkWrap.style.cssText = "display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700";
+    const met = h.target > 0 && wkCount >= h.target;
+    const cnt = document.createElement("span");
+    cnt.textContent = wkCount;
+    cnt.style.color = met ? "var(--accent)" : "var(--muted)";
+    const slash = document.createElement("span"); slash.textContent = "/"; slash.style.color = "var(--line)";
+    const tgt = document.createElement("input");
+    tgt.value = h.target || "";
+    tgt.placeholder = "7";
+    tgt.title = "times per week";
+    tgt.style.cssText = "width:26px;text-align:center;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:12px;font-weight:700;color:var(--ink);outline:none;background:#fff;padding:2px 0";
+    tgt.onchange = () => { const v = parseInt(tgt.value); h.target = (isNaN(v) || v <= 0) ? null : v; save(); render(); };
+    wkWrap.appendChild(cnt); wkWrap.appendChild(slash); wkWrap.appendChild(tgt);
+    if (met) { const star = document.createElement("span"); star.textContent = "✨"; wkWrap.appendChild(star); }
+    wkTd.appendChild(wkWrap);
+    tr.appendChild(wkTd);
+
     const streakTd = document.createElement("td");
     streakTd.className = "habit-streak";
     streakTd.textContent = currentStreak(h) > 0 ? currentStreak(h) + "🔥" : "—";
@@ -829,7 +872,7 @@ function renderHabits(view) {
   const add = document.createElement("button");
   add.className = "add-btn";
   add.textContent = "+ Add habit";
-  add.onclick = () => { state.habits.push({ id: uid(), name: "", days: {} }); save(); render(); };
+  add.onclick = () => { state.habits.push({ id: uid(), name: "", days: {}, target: null }); save(); render(); };
   card.appendChild(add);
   view.appendChild(card);
 }
@@ -841,6 +884,11 @@ function currentStreak(h) {
   if (!h.days[toISO(d)]) d = addDays(d, -1);
   while (h.days[toISO(d)]) { count++; d = addDays(d, -1); }
   return count;
+}
+function weekDoneCount(h, weekStart) {
+  let n = 0;
+  for (let i = 0; i < 7; i++) { if (h.days[toISO(addDays(weekStart, i))]) n++; }
+  return n;
 }
 
 /* ---------------- Today ---------------- */
