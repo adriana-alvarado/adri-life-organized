@@ -13,6 +13,12 @@ Just open `index.html` in any browser (double-click the file). There's nothing t
 - **Targets** — your measurable goals with progress bars: longest run → 10k (with a 5k milestone), fastest mile → 8:00, body weight → 115 lbs, pull-ups → 1, Instagram → 700 followers, 2 new posts, 5 new friends. Set a **start** and update **now** as you progress; hit 100% for +120 XP.
 - **Roadmaps** — every big goal broken into a checklist of **subgoals**, each with its own progress bar: Run a 10k, Sub-8 mile, Get a pull-up, Reach 115 lbs, Grow Instagram to 700, Build my social life, and the detailed Robotics + CSWA plan (with phases, a **"pick up here" breadcrumb**, and a definition of done). Add your own subgoals or whole new roadmaps anytime.
 - **Habits** — a weekly habit grid. Add the habits you want to build, click a square per day, and watch your 🔥 streak grow. Navigate between weeks with the arrows.
+- **Calories** — track what you eat and burn each day:
+  - **Net calories** (eaten − burned) against a daily **budget**, with a progress bar that turns red if you go over, plus a separate **move goal** for calories burned.
+  - **Two logs** — 🍓 *Eaten* and 🔥 *Burned* — where you add items with a name + kcal, or tap a **quick-add** chip (Banana, Greek yogurt, Run 30 min…) to log a typical food or workout in one click.
+  - **Day navigation** with the arrows, so you can review or backfill past days.
+  - **Meal reminders** — set the times you want a nudge to eat, flip reminders on, and the page pops a friendly "🍓 Time to eat!" toast (and a browser notification, if you allow them) at each time while the page is open.
+  - A **glance card on Today** shows your net/budget and the next meal nudge, and taps through to the full tracker.
 - **Life Audit** — rate your satisfaction 1–10 across three areas:
   - Health & Fitness
   - Career & Finances

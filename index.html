@@ -477,6 +477,7 @@ function defaultState() {
     quarterTheme: "",
     reflections: { weekWin: "", weekImprove: "", quarterReview: "" },
     auditHistory: [],    // [{ date, areas: {name: avg}, overall }]
+    nutrition: defaultNutrition(),
     gamification: { lastSeenLevel: 1 },
     seeded: false
   };
@@ -531,6 +532,27 @@ function seedContent(s) {
   s.habitsV2 = true;
   s.roadmapsV2 = true;
   s.calorieV1 = true;
+}
+
+// Default calorie / nutrition tracker config.
+function defaultNutrition() {
+  return {
+    budget: 1300,                              // daily calorie budget (eat under this)
+    burnGoal: 300,                             // optional daily move goal (kcal)
+    reminders: ["08:00", "12:30", "16:00", "19:00"], // meal-time nudges
+    remindersOn: false,                        // browser notifications opt-in
+    log: {},                                   // "YYYY-MM-DD": { eaten:[{id,name,kcal}], burned:[{id,name,kcal}] }
+    fired: {}                                  // "date|time": true — so a reminder fires once per day
+  };
+}
+function migrateNutritionV1(s) {
+  if (!s.nutrition || typeof s.nutrition !== "object") { s.nutrition = defaultNutrition(); return; }
+  const d = defaultNutrition();
+  ["budget", "burnGoal"].forEach(k => { if (typeof s.nutrition[k] !== "number") s.nutrition[k] = d[k]; });
+  if (!Array.isArray(s.nutrition.reminders)) s.nutrition.reminders = d.reminders;
+  if (typeof s.nutrition.remindersOn !== "boolean") s.nutrition.remindersOn = false;
+  if (!s.nutrition.log || typeof s.nutrition.log !== "object") s.nutrition.log = {};
+  if (!s.nutrition.fired || typeof s.nutrition.fired !== "object") s.nutrition.fired = {};
 }
 
 // One-time: add the daily calorie habit + the 115-plan calorie subgoal.
@@ -711,6 +733,7 @@ function migrate(s) {
   migrateHabitsV2(s);
   migrateRoadmapsV2(s);
   migrateCalorieV1(s);
+  migrateNutritionV1(s);
   if (!Array.isArray(s.targets)) s.targets = [];
   migrateTargetsV2(s);
   if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
@@ -815,14 +838,16 @@ const TABS = [
   { id: "goals", label: "Goals" },
   { id: "targets", label: "Targets" },
   { id: "habits", label: "Habits" },
+  { id: "calories", label: "Calories" },
   { id: "roadmap", label: "Roadmaps" },
   { id: "audit", label: "Life Audit" },
   { id: "progress", label: "Progress" }
 ];
 let activeTab = "today";
 let weekOffset = 0; // for habit tracker
+let calOffset = 0;  // for calorie tracker (0 = today, -1 = yesterday…)
 
-const TAB_ICONS = { today: "🏠", goals: "⭐", targets: "🎯", habits: "🔥", roadmap: "🌴", audit: "🔍", progress: "📈" };
+const TAB_ICONS = { today: "🏠", goals: "⭐", targets: "🎯", habits: "🔥", calories: "🍓", roadmap: "🌴", audit: "🔍", progress: "📈" };
 function renderTabs() {
   const bar = document.getElementById("tabBar");
   bar.innerHTML = "";
@@ -847,6 +872,7 @@ function render() {
   if (activeTab === "goals") renderGoals(view);
   if (activeTab === "targets") renderTargets(view);
   if (activeTab === "habits") renderHabits(view);
+  if (activeTab === "calories") renderCalories(view);
   if (activeTab === "roadmap") renderRoadmap(view);
   if (activeTab === "audit") renderAudit(view);
   if (activeTab === "progress") renderProgress(view);
@@ -1105,6 +1131,26 @@ function renderToday(view) {
     tcard.style.cursor = "pointer";
     tcard.onclick = (e) => { if (e.target.tagName !== "INPUT") { activeTab = "targets"; render(); } };
     view.appendChild(tcard);
+  }
+
+  // Calories at a glance
+  {
+    const n = state.nutrition;
+    const ct = calTotals(today());
+    const over = ct.net > n.budget;
+    const eatPct = n.budget > 0 ? Math.min(100, Math.round((ct.eaten / n.budget) * 100)) : 0;
+    const next = nextReminderTime();
+    const ccard = document.createElement("div");
+    ccard.className = "card"; ccard.style.cssText = "margin-top:16px;cursor:pointer";
+    ccard.innerHTML = `<h2>Calories today <span class="tag">🍓 ${ct.net} net / ${n.budget}</span></h2>
+      <div class="tbar"><div class="tfill" style="width:${eatPct}%;background:${over ? '#e23f7a' : 'linear-gradient(90deg,var(--accent),var(--blue))'}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:8px">
+        <span>🍓 ${ct.eaten} eaten · 🔥 ${ct.burned} burned</span>
+        <span style="color:${over ? '#e23f7a' : 'var(--accent)'}">${over ? (ct.net - n.budget) + ' over' : (n.budget - ct.net) + ' left'}</span>
+      </div>
+      ${next ? `<div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:6px">⏰ next meal nudge: ${fmtTime(next)}</div>` : ''}`;
+    ccard.onclick = () => { activeTab = "calories"; calOffset = 0; render(); };
+    view.appendChild(ccard);
   }
 
   const grid = document.createElement("div");
@@ -1730,6 +1776,312 @@ function targetField(t, key, label) {
   return wrap;
 }
 
+/* ---------------- Calories ---------------- */
+// Quick-add presets so logging a typical meal/workout is one tap.
+const FOOD_PRESETS = [
+  { name: "Coffee w/ milk", kcal: 60 }, { name: "Greek yogurt", kcal: 120 },
+  { name: "Banana", kcal: 105 }, { name: "Apple", kcal: 95 },
+  { name: "Eggs (2)", kcal: 160 }, { name: "Toast + PB", kcal: 230 },
+  { name: "Chicken salad", kcal: 350 }, { name: "Protein shake", kcal: 180 }
+];
+const MOVE_PRESETS = [
+  { name: "Run 30 min", kcal: 300 }, { name: "Walk 30 min", kcal: 120 },
+  { name: "Pilates 45 min", kcal: 200 }, { name: "Strength 30 min", kcal: 180 },
+  { name: "Pull-up practice", kcal: 60 }
+];
+
+function calDayISO() { return toISO(addDays(new Date(), calOffset)); }
+function calDay(iso) {
+  const log = state.nutrition.log;
+  if (!log[iso]) log[iso] = { eaten: [], burned: [] };
+  if (!Array.isArray(log[iso].eaten)) log[iso].eaten = [];
+  if (!Array.isArray(log[iso].burned)) log[iso].burned = [];
+  return log[iso];
+}
+function calTotals(iso) {
+  const d = state.nutrition.log[iso] || { eaten: [], burned: [] };
+  const eaten = (d.eaten || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
+  const burned = (d.burned || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
+  return { eaten, burned, net: eaten - burned };
+}
+
+function renderCalories(view) {
+  const n = state.nutrition;
+  const iso = calDayISO();
+  const isToday = calOffset === 0;
+  const t = calTotals(iso);
+  const remaining = n.budget - t.net;
+
+  /* --- Day navigation --- */
+  const nav = document.createElement("div");
+  nav.className = "week-nav";
+  const dObj = addDays(new Date(), calOffset);
+  const prettyDay = dObj.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  nav.innerHTML = `<button id="calPrev">‹</button>
+    <span class="label">${isToday ? "Today · " : ""}${prettyDay}</span>
+    <button id="calNext" ${isToday ? "disabled style='opacity:.35;cursor:default'" : ""}>›</button>`;
+  view.appendChild(nav);
+  nav.querySelector("#calPrev").onclick = () => { calOffset--; render(); };
+  nav.querySelector("#calNext").onclick = () => { if (calOffset < 0) { calOffset++; render(); } };
+
+  /* --- Summary card --- */
+  const eatPct = n.budget > 0 ? Math.min(100, Math.round((t.eaten / n.budget) * 100)) : 0;
+  const over = t.net > n.budget;
+  const sum = document.createElement("div");
+  sum.className = "card";
+  sum.innerHTML = `<h2>Calories <span class="tag">${isToday ? "today" : "that day"}</span></h2>
+    <p class="hint">Net = eaten − burned. Stay at or under your budget to trend toward 115 lbs 🍓</p>`;
+  const big = document.createElement("div");
+  big.style.cssText = "display:flex;align-items:flex-end;gap:8px;margin:2px 0 12px";
+  big.innerHTML = `<span style="font-family:'Baloo 2',cursive;font-weight:800;font-size:40px;line-height:1;color:${over ? '#e23f7a' : 'var(--accent)'}">${t.net}</span>
+    <span style="font-size:14px;font-weight:700;color:var(--muted);padding-bottom:6px">net kcal · budget ${n.budget}</span>`;
+  sum.appendChild(big);
+
+  const bar = document.createElement("div");
+  bar.className = "tbar";
+  bar.innerHTML = `<div class="tfill" style="width:${eatPct}%;background:${over ? '#e23f7a' : 'linear-gradient(90deg,var(--accent),var(--blue))'}"></div>`;
+  sum.appendChild(bar);
+
+  const meta = document.createElement("div");
+  meta.style.cssText = "display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:9px 0 4px;font-weight:700";
+  meta.innerHTML = `<span>🍓 eaten <strong style="color:var(--ink)">${t.eaten}</strong></span>
+    <span>🔥 burned <strong style="color:var(--ink)">${t.burned}</strong></span>
+    <span style="color:${over ? '#e23f7a' : 'var(--accent)'}">${over ? (t.net - n.budget) + " over" : remaining + " left"}</span>`;
+  sum.appendChild(meta);
+  if (n.burnGoal > 0) {
+    const bg = document.createElement("div");
+    const bgPct = Math.min(100, Math.round((t.burned / n.burnGoal) * 100));
+    bg.style.cssText = "font-size:12px;color:var(--muted);font-weight:700;margin-top:6px";
+    bg.innerHTML = `${t.burned >= n.burnGoal ? "✅" : "🎯"} move goal: ${t.burned} / ${n.burnGoal} kcal burned (${bgPct}%)`;
+    sum.appendChild(bg);
+  }
+  view.appendChild(sum);
+
+  /* --- Two logs: eaten + burned --- */
+  const grid = document.createElement("div");
+  grid.className = "grid cols-2";
+  grid.style.marginTop = "16px";
+  grid.appendChild(calLogCard(iso, "eaten", "🍓 Eaten", "What did you eat?", FOOD_PRESETS));
+  grid.appendChild(calLogCard(iso, "burned", "🔥 Burned", "Any movement?", MOVE_PRESETS));
+  view.appendChild(grid);
+
+  /* --- Settings: budget, goal, reminders --- */
+  const set = document.createElement("div");
+  set.className = "card";
+  set.style.marginTop = "16px";
+  set.innerHTML = `<h2>Settings & reminders <span class="tag purple">your way</span></h2>
+    <p class="hint">Set your daily budget and the times you want a nudge to eat. Reminders pop up while this page is open.</p>`;
+
+  const goals = document.createElement("div");
+  goals.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px";
+  goals.appendChild(numField("Daily budget (kcal)", n.budget, v => { n.budget = v == null ? 0 : v; save(); render(); }));
+  goals.appendChild(numField("Move goal (kcal)", n.burnGoal, v => { n.burnGoal = v == null ? 0 : v; save(); render(); }));
+  set.appendChild(goals);
+
+  // notification toggle
+  const tog = document.createElement("button");
+  tog.className = "add-btn";
+  tog.style.cssText = "width:auto;margin:0 0 12px";
+  const supported = ("Notification" in window);
+  tog.textContent = n.remindersOn ? "🔔 Reminders on — turn off" : "🔕 Turn on meal reminders";
+  tog.onclick = async () => {
+    if (!n.remindersOn) {
+      if (supported && Notification.permission !== "granted") {
+        try { await Notification.requestPermission(); } catch (e) {}
+      }
+      n.remindersOn = true;
+    } else {
+      n.remindersOn = false;
+    }
+    save(); render();
+  };
+  set.appendChild(tog);
+  if (n.remindersOn && supported && Notification.permission === "denied") {
+    const warn = document.createElement("div");
+    warn.style.cssText = "font-size:12px;color:#e23f7a;font-weight:700;margin-bottom:10px";
+    warn.textContent = "⚠️ Notifications are blocked in your browser — you'll still see in-app pop-ups, but enable notifications in site settings for system alerts.";
+    set.appendChild(warn);
+  }
+
+  // reminder times
+  const label = document.createElement("div");
+  label.style.cssText = "font-size:11px;color:#8a5a93;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em";
+  label.textContent = "Reminder times";
+  set.appendChild(label);
+  const chips = document.createElement("div");
+  chips.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;align-items:center";
+  (n.reminders || []).slice().sort().forEach((time, i) => {
+    const chip = document.createElement("span");
+    chip.style.cssText = "display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:2px solid var(--ink);border-radius:999px;padding:4px 6px 4px 12px;font-weight:800;font-size:13px;color:#7a3a86";
+    chip.innerHTML = `<span>${fmtTime(time)}</span>`;
+    const x = document.createElement("button");
+    x.className = "del"; x.innerHTML = "✕"; x.style.cssText = "opacity:.6;width:20px;height:20px;line-height:1";
+    x.onclick = () => { n.reminders = n.reminders.filter(r => r !== time); save(); render(); };
+    chip.appendChild(x);
+    chips.appendChild(chip);
+  });
+  const timeInp = document.createElement("input");
+  timeInp.type = "time";
+  timeInp.className = "pill-input";
+  timeInp.style.cssText = "width:auto;padding:6px 10px";
+  const addT = document.createElement("button");
+  addT.className = "add-btn"; addT.style.cssText = "width:auto;margin:0";
+  addT.textContent = "+ Add time";
+  addT.onclick = () => {
+    const v = timeInp.value;
+    if (v && !(n.reminders || []).includes(v)) { n.reminders.push(v); save(); render(); }
+  };
+  chips.appendChild(timeInp);
+  chips.appendChild(addT);
+  set.appendChild(chips);
+  view.appendChild(set);
+}
+
+// One side (eaten OR burned) of a day's calorie log.
+function calLogCard(iso, kind, title, placeholder, presets) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const day = calDay(iso);
+  const list = day[kind];
+  const tag = kind === "eaten" ? "" : "warm";
+  card.innerHTML = `<h2>${title} <span class="tag ${tag}">${list.reduce((s, x) => s + (Number(x.kcal) || 0), 0)} kcal</span></h2>`;
+
+  const ul = document.createElement("ul");
+  ul.className = "goal-list";
+  function draw() {
+    ul.innerHTML = "";
+    if (!list.length) {
+      const empty = document.createElement("li");
+      empty.style.cssText = "color:var(--muted);font-size:13px;font-weight:600;padding:6px 2px";
+      empty.textContent = kind === "eaten" ? "Nothing logged yet." : "No movement logged yet.";
+      ul.appendChild(empty);
+    }
+    list.forEach((item, i) => {
+      const li = document.createElement("li");
+      li.className = "goal-item";
+      const name = document.createElement("input");
+      name.className = "habit-name-input";
+      name.style.cssText = "flex:1;font-size:14px";
+      name.placeholder = placeholder;
+      name.value = item.name || "";
+      name.oninput = () => { item.name = name.value; save(); };
+      const kcal = document.createElement("input");
+      kcal.type = "number"; kcal.className = "pill-input";
+      kcal.style.cssText = "width:74px;text-align:right";
+      kcal.placeholder = "kcal";
+      kcal.value = item.kcal == null ? "" : item.kcal;
+      kcal.onchange = () => { item.kcal = kcal.value === "" ? 0 : parseFloat(kcal.value); save(); render(); };
+      const del = document.createElement("button");
+      del.className = "del"; del.innerHTML = "✕"; del.style.opacity = ".5";
+      del.onclick = () => { list.splice(i, 1); save(); render(); };
+      li.appendChild(name); li.appendChild(kcal); li.appendChild(del);
+      ul.appendChild(li);
+    });
+  }
+  draw();
+  card.appendChild(ul);
+
+  const add = document.createElement("button");
+  add.className = "add-btn"; add.style.marginTop = "10px";
+  add.textContent = kind === "eaten" ? "+ Add food" : "+ Add activity";
+  add.onclick = () => { list.push({ id: uid(), name: "", kcal: null }); save(); render(); };
+  card.appendChild(add);
+
+  // quick-add preset chips
+  const presetWrap = document.createElement("div");
+  presetWrap.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-top:12px";
+  const lab = document.createElement("div");
+  lab.style.cssText = "flex:0 0 100%;font-size:11px;color:#8a5a93;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px";
+  lab.textContent = "Quick add";
+  presetWrap.appendChild(lab);
+  presets.forEach(p => {
+    const b = document.createElement("button");
+    b.style.cssText = "border:2px solid var(--ink);background:var(--panel);border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm)";
+    b.textContent = `${p.name} · ${p.kcal}`;
+    b.onmouseenter = () => b.style.background = "var(--accent-soft)";
+    b.onmouseleave = () => b.style.background = "var(--panel)";
+    b.onclick = () => { list.push({ id: uid(), name: p.name, kcal: p.kcal }); save(); render(); };
+    presetWrap.appendChild(b);
+  });
+  card.appendChild(presetWrap);
+  return card;
+}
+
+function numField(labelText, val, onset) {
+  const wrap = document.createElement("div");
+  const l = document.createElement("label"); l.className = "field"; l.textContent = labelText;
+  const inp = document.createElement("input");
+  inp.type = "number"; inp.className = "pill-input"; inp.style.width = "100%";
+  inp.value = val == null ? "" : val;
+  inp.onchange = () => onset(inp.value === "" ? null : parseFloat(inp.value));
+  wrap.appendChild(l); wrap.appendChild(inp);
+  return wrap;
+}
+
+// "08:00" -> "8:00 AM"
+function fmtTime(hhmm) {
+  const [h, m] = (hhmm || "").split(":").map(Number);
+  if (isNaN(h)) return hhmm;
+  const d = new Date(); d.setHours(h, m || 0, 0, 0);
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+// Next reminder time still to come today (or the earliest one for tomorrow).
+function nextReminderTime() {
+  const n = state.nutrition;
+  if (!n || !Array.isArray(n.reminders) || !n.reminders.length) return null;
+  const sorted = n.reminders.slice().sort();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  for (const t of sorted) {
+    const [h, m] = t.split(":").map(Number);
+    if (!isNaN(h) && h * 60 + (m || 0) > nowMin) return t;
+  }
+  return sorted[0]; // all passed — first one tomorrow
+}
+
+/* ---------------- Meal reminder engine ---------------- */
+// Pure client-side: fires while the page is open. Each time fires once per day.
+function showMealToast(time) {
+  let toast = document.getElementById("mealToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "mealToast";
+    toast.style.cssText = "position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#ff5ca8,#b06cf0);color:#fff;border:2.5px solid var(--ink);box-shadow:5px 5px 0 rgba(58,43,63,.7);border-radius:14px;padding:14px 18px;font-family:'Baloo 2',cursive;font-weight:800;font-size:16px;max-width:90vw;text-align:center;cursor:pointer;animation:bob 1.2s ease infinite";
+    toast.onclick = () => toast.remove();
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `🍓 Time to eat! <span style="font-weight:600;font-size:13px;opacity:.9">(${fmtTime(time)} reminder · tap to dismiss)</span>`;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { if (toast) toast.remove(); }, 60000);
+}
+
+function checkMealReminders() {
+  const n = state.nutrition;
+  if (!n || !n.remindersOn || !Array.isArray(n.reminders)) return;
+  const iso = today();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  let dirty = false;
+  // prune fired keys from other days so the object stays small
+  Object.keys(n.fired || {}).forEach(k => { if (!k.startsWith(iso + "|")) { delete n.fired[k]; dirty = true; } });
+  n.reminders.forEach(time => {
+    const [h, m] = time.split(":").map(Number);
+    if (isNaN(h)) return;
+    const target = h * 60 + (m || 0);
+    const key = iso + "|" + time;
+    // fire if we're at/after the time, within a 30-min catch-up window, and haven't yet today
+    if (nowMin >= target && nowMin < target + 30 && !n.fired[key]) {
+      n.fired[key] = true; dirty = true;
+      showMealToast(time);
+      if (("Notification" in window) && Notification.permission === "granted") {
+        try { new Notification("🍓 Time to eat!", { body: `It's ${fmtTime(time)} — fuel up to stay on track.` }); } catch (e) {}
+      }
+    }
+  });
+  if (dirty) save();
+}
+
 /* ---------------- Summer Roadmap ---------------- */
 function planStats(plan) {
   let done = 0, total = 0;
@@ -1927,6 +2279,10 @@ setInterval(tickClock, 15000);
 
 /* ---------------- Go ---------------- */
 render();
+
+// Meal reminders: check on load and every 30s while the page is open.
+checkMealReminders();
+setInterval(checkMealReminders, 30000);
 
 // When the calendar day changes (incl. leaving the app open overnight), re-render
 // so today's habits are fresh and ready to check off again.
