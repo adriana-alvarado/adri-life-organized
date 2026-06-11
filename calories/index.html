@@ -170,6 +170,7 @@ const KEY = "calorie-cutie-v1";
 function defaultState() {
   return {
     profile: { sex: "female", age: 25, heightCm: 165, weightKg: 54.4, units: "imperial" }, // ~5'5", 120 lb
+    profileSet: false,             // has the user entered their own stats yet?
     budget: 1300,
     countResting: true,            // include resting (BMR) burn in the day's total
     reminders: ["08:00", "12:30", "16:00", "19:00"],
@@ -187,6 +188,7 @@ function migrate(s) {
   if (!["female", "male", "other"].includes(p.sex)) p.sex = "female";
   ["age", "heightCm", "weightKg"].forEach(k => { if (typeof p[k] !== "number" || !isFinite(p[k])) p[k] = d.profile[k]; });
   if (!["imperial", "metric"].includes(p.units)) p.units = "imperial";
+  if (typeof s.profileSet !== "boolean") s.profileSet = false;
   if (typeof s.budget !== "number") s.budget = d.budget;
   if (typeof s.countResting !== "boolean") s.countResting = true;
   if (!Array.isArray(s.reminders)) s.reminders = d.reminders.slice();
@@ -246,6 +248,14 @@ function runKcal(distanceKm, timeMin) {
 }
 // Calories from steps, scaled by body weight (~net walking).
 function stepsKcal(steps) { return Math.round((steps || 0) * state.profile.weightKg * 0.0004); }
+// One-line summary of the stats driving the estimates, e.g. "♀ · 25y · 5'5" · 120 lb · BMR 1289".
+function statsSummaryText() {
+  const p = state.profile, imperial = p.units === "imperial";
+  const sym = p.sex === "female" ? "♀" : p.sex === "male" ? "♂" : "•";
+  const wt = imperial ? Math.round(kgToLb(p.weightKg)) + " lb" : Math.round(p.weightKg) + " kg";
+  let ht; if (imperial) { const f = cmToFtIn(p.heightCm); ht = `${f.ft}'${f.inch}"`; } else ht = Math.round(p.heightCm) + " cm";
+  return `${sym} · ${p.age}y · ${ht} · ${wt} · BMR ${Math.round(bmr())}`;
+}
 
 /* ===================== day data ===================== */
 let calOffset = 0, showSettings = false, addKind = "eaten";
@@ -299,6 +309,9 @@ function render() {
   nav.querySelector("#next").onclick = () => { if (calOffset < 0) { calOffset++; render(); } };
   main.appendChild(nav);
 
+  /* first-run: ask for the user's data so the burn math is theirs */
+  if (!state.profileSet) main.appendChild(setupCard());
+
   /* summary + auto burn breakdown */
   main.appendChild(summaryCard(iso, isToday));
 
@@ -332,9 +345,11 @@ function summaryCard(iso, isToday) {
       <div class="brow"><span class="ic">🏋️</span><span class="nm">Workouts</span><span class="v" id="workVal">${n.workouts}</span></div>
       <div class="brow tot"><span class="ic">🔥</span><span class="nm">Total burned</span><span class="v" id="totBurn">${n.burned}</span></div>
       <span class="togline" id="restTog">${state.countResting ? "✓ resting burn counts toward your total — tap to exclude" : "✗ resting burn excluded — tap to include"}</span>
+      <div class="mini" id="statsLine" style="cursor:pointer;margin-top:9px">📐 from your stats: ${statsSummaryText()} — tap to edit</div>
     </div>
   </div>`);
   card.querySelector("#restTog").onclick = () => { state.countResting = !state.countResting; save(); render(); };
+  card.querySelector("#statsLine").onclick = () => { showSettings = true; render(); document.getElementById("main").lastChild.scrollIntoView({ behavior: "smooth", block: "start" }); };
   return card;
 }
 
@@ -453,13 +468,11 @@ function burnCard(iso) {
   return card;
 }
 
-function settingsCard() {
-  const p = state.profile, imperial = p.units === "imperial", supported = ("Notification" in window);
+// A reusable, fully-wired block of body-stat inputs (used by setup + settings).
+function profileBlock() {
+  const p = state.profile, imperial = p.units === "imperial";
   const ft = cmToFtIn(p.heightCm);
-  const card = el(`<div class="card"><h2>⚙️ Settings</h2>
-    <p class="hint">Your stats power the automatic burn estimates. BMR right now: <b>${Math.round(bmr())}</b> kcal/day.</p>
-
-    <div class="sublbl">Your body stats</div>
+  const wrap = el(`<div>
     <div class="grid2">
       <div><label class="f">Sex (for BMR)</label>
         <select class="t" id="sex" style="width:100%">
@@ -474,7 +487,49 @@ function settingsCard() {
       <div id="heightWrap"></div>
     </div>
     <button class="togbtn" id="unitTog">📐 Units: ${imperial ? "Imperial (lb / ft·in)" : "Metric (kg / cm)"} — tap to switch</button>
+  </div>`);
 
+  const hw = wrap.querySelector("#heightWrap");
+  if (imperial) hw.innerHTML = `<label class="f">Height</label><div class="grid2"><input class="t" id="hft" type="number" inputmode="numeric" value="${ft.ft}" placeholder="ft" style="width:100%" /><input class="t" id="hin" type="number" inputmode="numeric" value="${ft.inch}" placeholder="in" style="width:100%" /></div>`;
+  else hw.innerHTML = `<label class="f">Height (cm)</label><input class="t" id="hcm" type="number" inputmode="numeric" value="${Math.round(p.heightCm)}" style="width:100%" />`;
+
+  wrap.querySelector("#sex").onchange = e => { p.sex = e.target.value; save(); render(); };
+  wrap.querySelector("#age").onchange = e => { p.age = Math.max(10, parseInt(e.target.value) || p.age); save(); render(); };
+  wrap.querySelector("#weight").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.weightKg = imperial ? lbToKg(v) : v; save(); render(); };
+  if (imperial) {
+    const hf = wrap.querySelector("#hft"), hi = wrap.querySelector("#hin");
+    const seth = () => { p.heightCm = ftInToCm(parseInt(hf.value) || 0, parseInt(hi.value) || 0); save(); render(); };
+    hf.onchange = seth; hi.onchange = seth;
+  } else wrap.querySelector("#hcm").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.heightCm = v; save(); render(); };
+  wrap.querySelector("#unitTog").onclick = () => { p.units = imperial ? "metric" : "imperial"; save(); render(); };
+  return wrap;
+}
+
+// First-run (or "edit my stats") card — entering data here is what powers the numbers.
+function setupCard() {
+  const card = el(`<div class="card" style="border-color:var(--accent);background:linear-gradient(135deg,#ffe3f1,#f0dcff 60%,#ffe9d6)">
+    <h2>👋 Let's set up your numbers</h2>
+    <p class="hint">Your burn estimates are calculated from <b>your</b> body stats. Pop them in once and every number below becomes yours.</p>
+  </div>`);
+  card.appendChild(profileBlock());
+  card.appendChild(el(`<div class="sublbl">Daily calorie budget</div>`));
+  const budget = el(`<input class="t" id="setupBudget" type="number" inputmode="numeric" value="${state.budget}" />`);
+  budget.onchange = e => { state.budget = e.target.value === "" ? 0 : parseFloat(e.target.value); save(); render(); };
+  card.appendChild(budget);
+  const bmrLine = el(`<div class="ok" style="color:var(--blue)">Your resting burn (BMR) works out to ≈ <b>${Math.round(bmr())}</b> kcal/day.</div>`);
+  card.appendChild(bmrLine);
+  const done = el(`<button class="addbtn" id="setupDone" style="width:100%;margin-top:12px;padding:11px">Save my stats 🍓</button>`);
+  done.onclick = () => { state.profileSet = true; save(); render(); };
+  card.appendChild(done);
+  return card;
+}
+
+function settingsCard() {
+  const supported = ("Notification" in window);
+  const card = el(`<div class="card"><h2>⚙️ Settings</h2>
+    <p class="hint">Your stats power the automatic burn estimates. BMR right now: <b>${Math.round(bmr())}</b> kcal/day.</p>
+    <div class="sublbl">Your body stats</div>
+    <div id="profileHost"></div>
     <div class="sublbl">Daily budget</div>
     <input class="t" id="budget" type="number" inputmode="numeric" value="${state.budget}" />
 
@@ -487,25 +542,7 @@ function settingsCard() {
     <div id="permNote"></div>
   </div>`);
 
-  // height field depends on units
-  const hw = card.querySelector("#heightWrap");
-  if (imperial) {
-    hw.innerHTML = `<label class="f">Height</label><div class="grid2"><input class="t" id="hft" type="number" inputmode="numeric" value="${ft.ft}" placeholder="ft" style="width:100%" /><input class="t" id="hin" type="number" inputmode="numeric" value="${ft.inch}" placeholder="in" style="width:100%" /></div>`;
-  } else {
-    hw.innerHTML = `<label class="f">Height (cm)</label><input class="t" id="hcm" type="number" inputmode="numeric" value="${Math.round(p.heightCm)}" style="width:100%" />`;
-  }
-
-  card.querySelector("#sex").onchange = e => { p.sex = e.target.value; save(); render(); };
-  card.querySelector("#age").onchange = e => { p.age = Math.max(10, parseInt(e.target.value) || p.age); save(); render(); };
-  card.querySelector("#weight").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.weightKg = imperial ? lbToKg(v) : v; save(); render(); };
-  if (imperial) {
-    const hf = card.querySelector("#hft"), hi = card.querySelector("#hin");
-    const seth = () => { p.heightCm = ftInToCm(parseInt(hf.value) || 0, parseInt(hi.value) || 0); save(); render(); };
-    hf.onchange = seth; hi.onchange = seth;
-  } else {
-    card.querySelector("#hcm").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.heightCm = v; save(); render(); };
-  }
-  card.querySelector("#unitTog").onclick = () => { p.units = imperial ? "metric" : "imperial"; save(); render(); };
+  card.querySelector("#profileHost").appendChild(profileBlock());
   card.querySelector("#budget").onchange = e => { state.budget = e.target.value === "" ? 0 : parseFloat(e.target.value); save(); render(); };
 
   const times = card.querySelector("#times");

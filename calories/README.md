@@ -27,9 +27,11 @@ Set the times you want a nudge in ⚙️ Settings and turn reminders on. At each
 
 > Reminders fire while the app is **open or minimized** (not when fully quit), since it's a web app. Keep it running — launching it at login is the easy fix.
 
-## Your stats
+## Your stats power everything
 
-Open ⚙️ Settings to set your **sex, age, height, and weight** (toggle between imperial and metric). These power all the automatic estimates — your current BMR is shown there. Everything is saved locally on this device only.
+The very first time you open the app, a **“Let's set up your numbers”** card asks for your **sex, age, height, and weight** (toggle imperial/metric) and your daily budget. The moment you enter them, every burn estimate becomes yours — your BMR is shown right there as you type.
+
+After that, the summary always shows a **“📐 from your stats: ♀ · 25y · 5'5" · 120 lb · BMR 1289 — tap to edit”** line, so it's clear the numbers come from your data. Tap it (or the ⚙️ gear) anytime to update your weight, etc., and all the calculations refresh instantly. Everything is saved locally on this device only.
 
 ## Note
 
