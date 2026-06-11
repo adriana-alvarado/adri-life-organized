@@ -19,6 +19,18 @@ Just open `index.html` in any browser (double-click the file). There's nothing t
   - **Day navigation** with the arrows, so you can review or backfill past days.
   - **Meal reminders** — set the times you want a nudge to eat, flip reminders on, and the page pops a friendly "🍓 Time to eat!" toast (and a browser notification, if you allow them) at each time while the page is open.
   - A **glance card on Today** shows your net/budget and the next meal nudge, and taps through to the full tracker.
+
+## 🍓 Calorie Cutie — the pop-out reminder app
+
+Inside the `calories/` folder is a **separate, installable mini-app** built just for tracking calories and getting nudged to eat. It shares the exact same data as the Calories tab above (same browser, same device), so anything you log shows up in both.
+
+**What makes it different from the tab:**
+- **Install it like a real app.** Open `calories/` in Chrome or Edge and use the **⬇️ Install** button (or the install icon in the address bar). It gets its own dock/taskbar icon and opens in its own window — no browser tabs.
+- **It pops out on its own.** At each meal time it plays a happy little **sound**, shows a system **notification** (even when you're in another app), flashes the taskbar title, and shows a big in-app banner with **“I'm eating”** and **“Snooze 10m”** buttons.
+- **One-tap logging.** Quick-add chips for common foods and workouts, plus a custom add row.
+- **Works offline** once installed.
+
+> Heads-up: like any web app, reminders fire while the app is **open or minimized** (not when fully quit). Keep it running — and on Mac/Windows you can set it to launch at login so it's always there. Want reminders even when it's fully closed? That needs a native app; just ask and I'll build one.
 - **Life Audit** — rate your satisfaction 1–10 across three areas:
   - Health & Fitness
   - Career & Finances

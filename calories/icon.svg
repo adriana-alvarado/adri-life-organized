@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff5ca8"/>
+      <stop offset="1" stop-color="#b06cf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- leaves -->
+  <g fill="#56c47a">
+    <path d="M256 150 L210 92 L232 128 L196 120 L236 150 Z"/>
+    <path d="M256 150 L302 92 L280 128 L316 120 L276 150 Z"/>
+    <path d="M256 150 L256 86 L240 124 L272 124 Z"/>
+  </g>
+  <!-- berry body -->
+  <path fill="#ff3d78" d="M256 142
+    C330 142 392 196 392 268
+    C392 352 320 470 256 470
+    C192 470 120 352 120 268
+    C120 196 182 142 256 142 Z"/>
+  <!-- seeds -->
+  <g fill="#fff0aa">
+    <circle cx="206" cy="232" r="11"/><circle cx="256" cy="218" r="11"/><circle cx="306" cy="232" r="11"/>
+    <circle cx="180" cy="290" r="11"/><circle cx="232" cy="278" r="11"/><circle cx="284" cy="278" r="11"/><circle cx="332" cy="290" r="11"/>
+    <circle cx="210" cy="340" r="11"/><circle cx="262" cy="332" r="11"/><circle cx="312" cy="340" r="11"/>
+    <circle cx="240" cy="396" r="11"/><circle cx="288" cy="396" r="11"/>
+    <circle cx="264" cy="440" r="10"/>
+  </g>
+</svg>

@@ -1870,7 +1870,9 @@ function renderCalories(view) {
   set.className = "card";
   set.style.marginTop = "16px";
   set.innerHTML = `<h2>Settings & reminders <span class="tag purple">your way</span></h2>
-    <p class="hint">Set your daily budget and the times you want a nudge to eat. Reminders pop up while this page is open.</p>`;
+    <p class="hint">Set your daily budget and the times you want a nudge to eat. Reminders pop up while this page is open.</p>
+    <a href="calories/index.html" style="display:inline-block;text-decoration:none;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(90deg,#ff5ca8,#b06cf0);border:2.5px solid var(--ink);border-radius:10px;box-shadow:var(--shadow-sm);padding:9px 14px;margin-bottom:14px">🍓 Open the pop-out reminder app →</a>
+    <p class="hint" style="margin-top:-6px">A tiny installable app (its own window, sound &amp; auto pop-up nudges) that shares this same data.</p>`;
 
   const goals = document.createElement("div");
   goals.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px";
