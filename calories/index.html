@@ -28,10 +28,9 @@
     background-size: 22px 22px;
     min-height: 100vh; display: flex; justify-content: center;
   }
-  .app { width: 100%; max-width: 420px; padding: 16px 14px 30px; }
+  .app { width: 100%; max-width: 430px; padding: 16px 14px 30px; }
 
   @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
   @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
   .card { background: var(--panel); border: 2.5px solid var(--ink); border-radius: 16px;
@@ -60,43 +59,57 @@
   .bar.over > div { background: var(--over); }
   .legend { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; color: var(--muted); }
   .legend .left { color: var(--accent); } .legend .left.over { color: var(--over); }
-  .movegoal { font-size: 11.5px; font-weight: 800; color: var(--muted); margin-top: 8px; }
+
+  .burn { margin-top: 14px; border-top: 1.5px dashed var(--line); padding-top: 12px; }
+  .brow { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; margin: 6px 0; }
+  .brow .ic { font-size: 15px; width: 20px; text-align: center; flex: none; }
+  .brow .nm { color: var(--muted); }
+  .brow .v { margin-left: auto; color: var(--ink); }
+  .brow.tot { border-top: 1.5px dashed var(--line); padding-top: 9px; margin-top: 9px; font-size: 14px; }
+  .brow.tot .v { color: var(--warm); }
+  .restbar { height: 8px; border-radius: 999px; background: var(--warm-soft); border: 2px solid var(--ink); overflow: hidden; margin: 3px 0 2px; }
+  .restbar > div { height: 100%; background: linear-gradient(90deg,#ffb14e,#ff8ac4); transition: width .6s; }
+  .mini { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .togline { font-size: 11.5px; font-weight: 800; color: var(--blue); cursor: pointer; margin-top: 8px; display: inline-block; }
 
   h2 { font-family: "Baloo 2", cursive; font-weight: 800; font-size: 15px; margin: 0 0 4px; color: var(--ink);
     display: flex; align-items: center; gap: 8px; }
   .hint { color: #8a5a93; font-size: 11.5px; font-weight: 700; margin: 0 0 12px; }
-  .seg { display: inline-flex; border: 2.5px solid var(--ink); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
-  .seg button { border: none; background: var(--panel); font: inherit; font-weight: 800; font-size: 12px; padding: 6px 12px; cursor: pointer; color: var(--ink); }
-  .seg button.on { background: linear-gradient(90deg,#ff5ca8,#b06cf0); color: #fff; }
+  .sublbl { font-size: 11px; font-weight: 800; color: #8a5a93; text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 4px; }
+  .sublbl:first-of-type { margin-top: 4px; }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
   .chip { border: 2px solid var(--ink); background: var(--panel); border-radius: 999px; padding: 5px 11px;
     font: inherit; font-size: 12px; font-weight: 800; color: var(--ink); cursor: pointer; box-shadow: var(--shadow-sm); }
   .chip:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(58,43,63,.5); }
   .chip.eat:hover { background: var(--accent-soft); } .chip.burn:hover { background: var(--warm-soft); }
 
-  .addrow { display: flex; gap: 7px; margin-top: 12px; }
+  .addrow { display: flex; gap: 7px; margin-top: 10px; align-items: center; }
   input.t { border: 2.5px solid var(--ink); border-radius: 10px; background: #fffaf3; padding: 8px 10px; font: inherit;
     font-weight: 700; color: var(--ink); width: 100%; box-shadow: inset 2px 2px 0 rgba(58,43,63,.05); }
   input.t::placeholder { color: var(--muted); font-weight: 600; }
   input.t:focus { outline: none; box-shadow: inset 2px 2px 0 rgba(255,93,162,.18); }
-  input.k { width: 78px; flex: none; text-align: right; }
+  input.k { width: 80px; flex: none; text-align: right; }
+  select.t { width: auto; }
   .addbtn { border: 2.5px solid var(--ink); border-radius: 10px; background: linear-gradient(90deg,#ff5ca8,#b06cf0);
     color: #fff; font: inherit; font-weight: 800; padding: 8px 12px; cursor: pointer; box-shadow: var(--shadow-sm); flex: none; }
   .addbtn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(58,43,63,.6); }
+  .calc { font-size: 12px; font-weight: 800; color: var(--warm); margin-top: 8px; min-height: 16px; }
 
   .items { list-style: none; padding: 0; margin: 6px 0 0; }
   .items li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1.5px dashed var(--line); font-size: 14px; font-weight: 700; }
   .items li:first-child { border-top: none; }
   .items .ic { font-size: 16px; flex: none; }
   .items .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .items .sub2 { font-size: 11px; color: var(--muted); font-weight: 700; }
   .items .kc { font-weight: 800; color: var(--muted); }
   .items .del { border: none; background: none; color: var(--muted); font-size: 15px; cursor: pointer; padding: 2px 4px; }
-  .items .empty { color: var(--muted); font-weight: 700; font-size: 13px; padding: 8px 0; border: none; }
+  .items .empty { color: var(--muted); font-weight: 700; font-size: 13px; padding: 6px 0; border: none; }
 
   label.f { display: block; font-size: 10.5px; font-weight: 800; color: #8a5a93; text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 4px; }
-  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .timechips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .timechips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-top: 4px; }
   .timechip { display: inline-flex; align-items: center; gap: 5px; background: var(--accent-soft); border: 2px solid var(--ink);
     border-radius: 999px; padding: 4px 5px 4px 11px; font-weight: 800; font-size: 12px; color: #7a3a86; }
   .timechip button { border: none; background: none; color: #b06; font-size: 13px; cursor: pointer; line-height: 1; }
@@ -107,8 +120,7 @@
   .warn { font-size: 11.5px; font-weight: 800; color: var(--over); margin-top: 8px; }
   .ok { font-size: 11.5px; font-weight: 800; color: var(--green); margin-top: 8px; }
 
-  /* reminder banner */
-  #banner { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 50; width: calc(100% - 28px); max-width: 400px;
+  #banner { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 50; width: calc(100% - 28px); max-width: 410px;
     background: linear-gradient(135deg,#ff5ca8,#b06cf0); color: #fff; border: 2.5px solid var(--ink); box-shadow: var(--shadow);
     border-radius: 16px; padding: 14px 16px; display: none; animation: bob 1.3s ease infinite; }
   #banner.show { display: block; }
@@ -122,9 +134,7 @@
   #flash { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff;
     font-weight: 800; font-size: 12px; padding: 7px 14px; border-radius: 999px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 40; }
   #flash.show { opacity: .92; }
-
   .foot { text-align: center; font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 6px; }
-  .foot a { color: var(--accent); text-decoration: none; }
   .hide { display: none !important; }
 </style>
 </head>
@@ -147,365 +157,470 @@
       </div>
       <button class="gear" id="gearBtn" title="Settings">⚙️</button>
     </header>
-
     <div id="main"></div>
-
-    <div class="foot">Your data is shared with <a href="../index.html">Life, Organized</a> · saved on this device only.</div>
+    <div class="foot">A standalone tracker · saved only on this device.</div>
   </div>
 
   <div id="flash">saved ✓</div>
 
 <script>
-/* ============ shared storage (same key as the main Life Organized app) ============ */
-const KEY = "life-organized-v1";
+/* ===================== standalone storage ===================== */
+const KEY = "calorie-cutie-v1";
 
-function defaultNutrition() {
+function defaultState() {
   return {
-    budget: 1300, burnGoal: 300,
+    profile: { sex: "female", age: 25, heightCm: 165, weightKg: 54.4, units: "imperial" }, // ~5'5", 120 lb
+    budget: 1300,
+    countResting: true,            // include resting (BMR) burn in the day's total
     reminders: ["08:00", "12:30", "16:00", "19:00"],
     remindersOn: false, sound: true,
-    log: {}, fired: {}
+    log: {},                       // "YYYY-MM-DD": { eaten:[], runs:[], steps:0, workouts:[] }
+    fired: {}
   };
 }
-function readDisk() { try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch (e) {} return {}; }
-let appState = readDisk();
-
-// normalize + return the nutrition slice, creating it if missing
-function nut() {
-  if (!appState.nutrition || typeof appState.nutrition !== "object") appState.nutrition = defaultNutrition();
-  const n = appState.nutrition, d = defaultNutrition();
-  if (typeof n.budget !== "number") n.budget = d.budget;
-  if (typeof n.burnGoal !== "number") n.burnGoal = d.burnGoal;
-  if (!Array.isArray(n.reminders)) n.reminders = d.reminders.slice();
-  if (typeof n.remindersOn !== "boolean") n.remindersOn = false;
-  if (typeof n.sound !== "boolean") n.sound = true;
-  if (!n.log || typeof n.log !== "object") n.log = {};
-  if (!n.fired || typeof n.fired !== "object") n.fired = {};
-  return n;
+function load() { try { const r = localStorage.getItem(KEY); if (r) return migrate(JSON.parse(r)); } catch (e) {} return defaultState(); }
+function migrate(s) {
+  const d = defaultState();
+  if (!s || typeof s !== "object") return d;
+  if (!s.profile || typeof s.profile !== "object") s.profile = d.profile;
+  const p = s.profile;
+  if (!["female", "male", "other"].includes(p.sex)) p.sex = "female";
+  ["age", "heightCm", "weightKg"].forEach(k => { if (typeof p[k] !== "number" || !isFinite(p[k])) p[k] = d.profile[k]; });
+  if (!["imperial", "metric"].includes(p.units)) p.units = "imperial";
+  if (typeof s.budget !== "number") s.budget = d.budget;
+  if (typeof s.countResting !== "boolean") s.countResting = true;
+  if (!Array.isArray(s.reminders)) s.reminders = d.reminders.slice();
+  if (typeof s.remindersOn !== "boolean") s.remindersOn = false;
+  if (typeof s.sound !== "boolean") s.sound = true;
+  if (!s.log || typeof s.log !== "object") s.log = {};
+  if (!s.fired || typeof s.fired !== "object") s.fired = {};
+  return s;
 }
+let state = load();
 
-// Merge our nutrition into the latest on-disk state so we never clobber the
-// rest of Life Organized (goals, habits…) edited in another tab.
 let flashTimer;
 function save() {
-  const disk = readDisk();
-  disk.nutrition = appState.nutrition;
-  appState = disk;
-  try { localStorage.setItem(KEY, JSON.stringify(appState)); } catch (e) {}
-  const f = document.getElementById("flash");
-  f.classList.add("show");
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => f.classList.remove("show"), 1100);
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  const f = document.getElementById("flash"); f.classList.add("show");
+  clearTimeout(flashTimer); flashTimer = setTimeout(() => f.classList.remove("show"), 1000);
 }
 
-// If the main app (another tab/window) changes data, pick it up.
-window.addEventListener("storage", (e) => { if (e.key === KEY) { appState = readDisk(); render(); } });
-
-/* ============ date helpers ============ */
-function toISO(d) {
-  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+/* ===================== date + unit helpers ===================== */
+function toISO(d) { const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0"); return `${y}-${m}-${day}`; }
 function today() { return toISO(new Date()); }
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
-function fmtTime(hhmm) {
-  const [h, m] = (hhmm || "").split(":").map(Number);
-  if (isNaN(h)) return hhmm;
-  const d = new Date(); d.setHours(h, m || 0, 0, 0);
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
+function fmtTime(hhmm) { const [h, m] = (hhmm || "").split(":").map(Number); if (isNaN(h)) return hhmm; const d = new Date(); d.setHours(h, m || 0, 0, 0); return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
 function uid() { return Math.random().toString(36).slice(2, 9); }
+const LB = 0.45359237;
+function kgToLb(kg) { return kg / LB; }
+function lbToKg(lb) { return lb * LB; }
+function cmToFtIn(cm) { const ti = cm / 2.54; let ft = Math.floor(ti / 12); let inch = Math.round(ti - ft * 12); if (inch === 12) { ft++; inch = 0; } return { ft, inch }; }
+function ftInToCm(ft, inch) { return ((ft || 0) * 12 + (inch || 0)) * 2.54; }
+const KM_PER_MI = 1.609344;
 
-/* ============ presets ============ */
+/* ===================== fitness math ===================== */
+// Mifflin-St Jeor resting metabolic rate (kcal/day).
+function bmr() {
+  const p = state.profile;
+  const base = 10 * p.weightKg + 6.25 * p.heightCm - 5 * p.age;
+  const off = p.sex === "male" ? 5 : p.sex === "female" ? -161 : -78;
+  return Math.max(800, base + off);
+}
+// Resting burn accumulated so far on a given day.
+function restingSoFar(iso) {
+  const day = bmr();
+  if (iso < today()) return Math.round(day);          // a finished past day = full BMR
+  if (iso > today()) return 0;
+  const n = new Date(); const frac = (n.getHours() * 60 + n.getMinutes() + n.getSeconds() / 60) / 1440;
+  return Math.round(day * frac);
+}
+// Calories burned on a run. Uses ACSM running VO2 when time is known, else ~1.03 kcal/kg/km.
+function runKcal(distanceKm, timeMin) {
+  const kg = state.profile.weightKg;
+  if (timeMin && timeMin > 0 && distanceKm > 0) {
+    const speed = (distanceKm * 1000) / timeMin;       // m/min
+    const vo2 = 0.2 * speed + 3.5;                      // ml O2 / kg / min
+    return Math.round(vo2 * kg * 0.005 * timeMin);      // 5 kcal per L O2
+  }
+  return Math.round(distanceKm * kg * 1.036);
+}
+// Calories from steps, scaled by body weight (~net walking).
+function stepsKcal(steps) { return Math.round((steps || 0) * state.profile.weightKg * 0.0004); }
+
+/* ===================== day data ===================== */
+let calOffset = 0, showSettings = false, addKind = "eaten";
+function calISO() { return toISO(addDays(new Date(), calOffset)); }
+function calDay(iso) {
+  if (!state.log[iso]) state.log[iso] = { eaten: [], runs: [], steps: 0, workouts: [] };
+  const d = state.log[iso];
+  if (!Array.isArray(d.eaten)) d.eaten = [];
+  if (!Array.isArray(d.runs)) d.runs = [];
+  if (typeof d.steps !== "number") d.steps = 0;
+  if (!Array.isArray(d.workouts)) d.workouts = [];
+  return d;
+}
+function dayNums(iso) {
+  const d = state.log[iso] || { eaten: [], runs: [], steps: 0, workouts: [] };
+  const eaten = (d.eaten || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
+  const runs = (d.runs || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
+  const steps = stepsKcal(d.steps || 0);
+  const workouts = (d.workouts || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
+  const resting = state.countResting ? restingSoFar(iso) : 0;
+  const burned = runs + steps + workouts + resting;
+  return { eaten, runs, steps, stepsCount: d.steps || 0, workouts, resting, burned, net: eaten - burned };
+}
+
+/* ===================== presets ===================== */
 const FOOD_PRESETS = [
   { name: "Coffee w/ milk", kcal: 60 }, { name: "Greek yogurt", kcal: 120 }, { name: "Banana", kcal: 105 },
   { name: "Apple", kcal: 95 }, { name: "Eggs (2)", kcal: 160 }, { name: "Toast + PB", kcal: 230 },
   { name: "Chicken salad", kcal: 350 }, { name: "Protein shake", kcal: 180 }, { name: "Rice bowl", kcal: 450 }
 ];
-const MOVE_PRESETS = [
-  { name: "Run 30 min", kcal: 300 }, { name: "Walk 30 min", kcal: 120 }, { name: "Pilates 45 min", kcal: 200 },
-  { name: "Strength 30 min", kcal: 180 }, { name: "Pull-up practice", kcal: 60 }
+const WORKOUT_PRESETS = [
+  { name: "Pilates 45 min", kcal: 200 }, { name: "Strength 30 min", kcal: 180 },
+  { name: "Yoga 30 min", kcal: 120 }, { name: "Cycling 30 min", kcal: 260 },
+  { name: "Pull-up practice", kcal: 60 }, { name: "HIIT 20 min", kcal: 220 }
 ];
 
-/* ============ calorie data ============ */
-let calOffset = 0;     // 0 = today, -1 = yesterday…
-let showSettings = false;
-let addKind = "eaten"; // for the custom add row
-
-function calISO() { return toISO(addDays(new Date(), calOffset)); }
-function calDay(iso) {
-  const log = nut().log;
-  if (!log[iso]) log[iso] = { eaten: [], burned: [] };
-  if (!Array.isArray(log[iso].eaten)) log[iso].eaten = [];
-  if (!Array.isArray(log[iso].burned)) log[iso].burned = [];
-  return log[iso];
-}
-function totals(iso) {
-  const d = nut().log[iso] || { eaten: [], burned: [] };
-  const eaten = (d.eaten || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
-  const burned = (d.burned || []).reduce((s, x) => s + (Number(x.kcal) || 0), 0);
-  return { eaten, burned, net: eaten - burned };
-}
-function addItem(kind, name, kcal) {
-  calDay(calISO())[kind].push({ id: uid(), name: name, kcal: kcal });
-  save(); render();
-}
-
-/* ============ render ============ */
+/* ===================== render ===================== */
 function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
 
 function render() {
-  const n = nut();
-  const iso = calISO();
-  const isToday = calOffset === 0;
-  const t = totals(iso);
-  const over = t.net > n.budget;
-  const eatPct = n.budget > 0 ? Math.min(100, Math.round((t.eaten / n.budget) * 100)) : 0;
-  const dObj = addDays(new Date(), calOffset);
-
+  const iso = calISO(), isToday = calOffset === 0, dObj = addDays(new Date(), calOffset);
   document.getElementById("dateLbl").textContent = dObj.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-
   const main = document.getElementById("main");
   main.innerHTML = "";
 
   /* day nav */
-  const nav = el(`<div class="daynav">
-    <button id="prev">‹</button>
+  const nav = el(`<div class="daynav"><button id="prev">‹</button>
     <span class="lbl">${isToday ? "Today" : dObj.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
     <button id="next" ${isToday ? "disabled" : ""}>›</button></div>`);
-  main.appendChild(nav);
   nav.querySelector("#prev").onclick = () => { calOffset--; render(); };
   nav.querySelector("#next").onclick = () => { if (calOffset < 0) { calOffset++; render(); } };
+  main.appendChild(nav);
 
-  /* summary */
-  const sum = el(`<div class="card">
-    <div class="net ${over ? "over" : ""}"><b>${t.net}</b><span>net kcal · budget ${n.budget}</span></div>
-    <div class="bar ${over ? "over" : ""}"><div style="width:${eatPct}%"></div></div>
-    <div class="legend">
-      <span>🍓 ${t.eaten} eaten · 🔥 ${t.burned} burned</span>
-      <span class="left ${over ? "over" : ""}">${over ? (t.net - n.budget) + " over" : (n.budget - t.net) + " left"}</span>
-    </div>
-    ${n.burnGoal > 0 ? `<div class="movegoal">${t.burned >= n.burnGoal ? "✅" : "🎯"} move goal: ${t.burned} / ${n.burnGoal} kcal burned</div>` : ""}
-  </div>`);
-  main.appendChild(sum);
+  /* summary + auto burn breakdown */
+  main.appendChild(summaryCard(iso, isToday));
 
-  /* quick add */
-  const quick = el(`<div class="card">
-    <h2>Quick add</h2>
-    <p class="hint">Tap to log in one click — or add your own below.</p>
-    <div style="font-size:11px;font-weight:800;color:#8a5a93;text-transform:uppercase;letter-spacing:.04em">🍓 Food</div>
-    <div class="chips" id="foodChips"></div>
-    <div style="font-size:11px;font-weight:800;color:#8a5a93;text-transform:uppercase;letter-spacing:.04em;margin-top:12px">🔥 Movement</div>
-    <div class="chips" id="moveChips"></div>
-    <div class="addrow">
-      <div class="seg" id="kindSeg">
-        <button data-k="eaten" class="${addKind === "eaten" ? "on" : ""}">🍓 Ate</button>
-        <button data-k="burned" class="${addKind === "burned" ? "on" : ""}">🔥 Burned</button>
-      </div>
-    </div>
-    <div class="addrow">
-      <input class="t" id="nameIn" placeholder="${addKind === "eaten" ? "What did you eat?" : "What did you do?"}" />
-      <input class="t k" id="kcalIn" type="number" inputmode="numeric" placeholder="kcal" />
-      <button class="addbtn" id="addBtn">+</button>
-    </div>
-  </div>`);
-  main.appendChild(quick);
-  const fc = quick.querySelector("#foodChips"), mc = quick.querySelector("#moveChips");
-  FOOD_PRESETS.forEach(p => { const b = el(`<button class="chip eat">${p.name} · ${p.kcal}</button>`); b.onclick = () => addItem("eaten", p.name, p.kcal); fc.appendChild(b); });
-  MOVE_PRESETS.forEach(p => { const b = el(`<button class="chip burn">${p.name} · ${p.kcal}</button>`); b.onclick = () => addItem("burned", p.name, p.kcal); mc.appendChild(b); });
-  quick.querySelectorAll("#kindSeg button").forEach(b => b.onclick = () => { addKind = b.dataset.k; render(); });
-  const nameIn = quick.querySelector("#nameIn"), kcalIn = quick.querySelector("#kcalIn");
-  const doAdd = () => {
-    const name = nameIn.value.trim(), kcal = kcalIn.value === "" ? null : parseFloat(kcalIn.value);
-    if (!name && kcal == null) return;
-    addItem(addKind, name || (addKind === "eaten" ? "Food" : "Activity"), kcal || 0);
-  };
-  quick.querySelector("#addBtn").onclick = doAdd;
-  kcalIn.onkeydown = (e) => { if (e.key === "Enter") doAdd(); };
-  nameIn.onkeydown = (e) => { if (e.key === "Enter") kcalIn.focus(); };
+  /* eat */
+  main.appendChild(eatCard(iso, isToday));
 
-  /* today's items */
-  const day = calDay(iso);
-  const logCard = el(`<div class="card"><h2>Logged ${isToday ? "today" : "that day"}</h2></div>`);
-  ["eaten", "burned"].forEach(kind => {
-    const list = day[kind];
-    if (!list.length) return;
-    const head = el(`<div style="font-size:11px;font-weight:800;color:#8a5a93;text-transform:uppercase;letter-spacing:.04em;margin-top:8px">${kind === "eaten" ? "🍓 Eaten" : "🔥 Burned"}</div>`);
-    logCard.appendChild(head);
-    const ul = el(`<ul class="items"></ul>`);
-    list.forEach((item, i) => {
-      const li = el(`<li><span class="ic">${kind === "eaten" ? "🍓" : "🔥"}</span><span class="nm"></span><span class="kc">${Number(item.kcal) || 0}</span><button class="del">✕</button></li>`);
-      li.querySelector(".nm").textContent = item.name || (kind === "eaten" ? "Food" : "Activity");
-      li.querySelector(".del").onclick = () => { list.splice(i, 1); save(); render(); };
-      ul.appendChild(li);
-    });
-    logCard.appendChild(ul);
-  });
-  if (!day.eaten.length && !day.burned.length) {
-    logCard.appendChild(el(`<div class="items"><div class="empty">Nothing logged yet — add your first bite above 🍓</div></div>`));
-  }
-  main.appendChild(logCard);
+  /* burn (runs + steps + workouts) */
+  main.appendChild(burnCard(iso, isToday));
 
-  /* settings */
   if (showSettings) main.appendChild(settingsCard());
+  liveTick();
+}
+
+function summaryCard(iso, isToday) {
+  const n = dayNums(iso);
+  const over = n.net > state.budget;
+  const eatPct = state.budget > 0 ? Math.min(100, Math.round((n.eaten / state.budget) * 100)) : 0;
+  const restPct = Math.min(100, Math.round((restingSoFar(iso) / Math.max(1, bmr())) * 100));
+  const card = el(`<div class="card">
+    <div class="net ${over ? "over" : ""}"><b id="netVal">${n.net}</b><span>net kcal · budget ${state.budget}</span></div>
+    <div class="bar ${over ? "over" : ""}"><div id="eatBar" style="width:${eatPct}%"></div></div>
+    <div class="legend"><span>🍓 <span id="eatenVal">${n.eaten}</span> eaten · 🔥 <span id="burnedVal">${n.burned}</span> burned</span>
+      <span class="left ${over ? "over" : ""}" id="leftVal">${over ? (n.net - state.budget) + " over" : (state.budget - n.net) + " left"}</span></div>
+
+    <div class="burn">
+      <div class="brow"><span class="ic">💤</span><span class="nm">Resting${isToday ? " (so far)" : ""}</span><span class="v" id="restVal">${n.resting}</span></div>
+      <div class="restbar"><div id="restBar" style="width:${restPct}%"></div></div>
+      <div class="mini" id="restMini"></div>
+      <div class="brow"><span class="ic">🏃</span><span class="nm">Runs</span><span class="v" id="runsVal">${n.runs}</span></div>
+      <div class="brow"><span class="ic">👟</span><span class="nm">Steps (<span id="stepCnt">${n.stepsCount}</span>)</span><span class="v" id="stepsVal">${n.steps}</span></div>
+      <div class="brow"><span class="ic">🏋️</span><span class="nm">Workouts</span><span class="v" id="workVal">${n.workouts}</span></div>
+      <div class="brow tot"><span class="ic">🔥</span><span class="nm">Total burned</span><span class="v" id="totBurn">${n.burned}</span></div>
+      <span class="togline" id="restTog">${state.countResting ? "✓ resting burn counts toward your total — tap to exclude" : "✗ resting burn excluded — tap to include"}</span>
+    </div>
+  </div>`);
+  card.querySelector("#restTog").onclick = () => { state.countResting = !state.countResting; save(); render(); };
+  return card;
+}
+
+function eatCard(iso, isToday) {
+  const day = calDay(iso);
+  const card = el(`<div class="card"><h2>🍓 Eaten</h2>
+    <div class="chips" id="foodChips"></div>
+    <div class="addrow"><input class="t" id="foodName" placeholder="What did you eat?" />
+      <input class="t k" id="foodKcal" type="number" inputmode="numeric" placeholder="kcal" />
+      <button class="addbtn" id="foodAdd">+</button></div>
+    <ul class="items" id="foodList"></ul></div>`);
+  const chips = card.querySelector("#foodChips");
+  FOOD_PRESETS.forEach(p => { const b = el(`<button class="chip eat">${p.name} · ${p.kcal}</button>`); b.onclick = () => { day.eaten.push({ id: uid(), name: p.name, kcal: p.kcal }); save(); render(); }; chips.appendChild(b); });
+  const nm = card.querySelector("#foodName"), kc = card.querySelector("#foodKcal");
+  const add = () => { const name = nm.value.trim(), k = kc.value === "" ? 0 : parseFloat(kc.value); if (!name && !k) return; day.eaten.push({ id: uid(), name: name || "Food", kcal: k || 0 }); save(); render(); };
+  card.querySelector("#foodAdd").onclick = add;
+  nm.onkeydown = e => { if (e.key === "Enter") kc.focus(); };
+  kc.onkeydown = e => { if (e.key === "Enter") add(); };
+  const list = card.querySelector("#foodList");
+  if (!day.eaten.length) list.appendChild(el(`<li class="empty">No food yet — add your first bite 🍓</li>`));
+  day.eaten.forEach((it, i) => {
+    const li = el(`<li><span class="ic">🍓</span><span class="nm"></span><span class="kc">${Number(it.kcal) || 0}</span><button class="del">✕</button></li>`);
+    li.querySelector(".nm").textContent = it.name || "Food";
+    li.querySelector(".del").onclick = () => { day.eaten.splice(i, 1); save(); render(); };
+    list.appendChild(li);
+  });
+  return card;
+}
+
+function burnCard(iso) {
+  const day = calDay(iso);
+  const imperial = state.profile.units === "imperial";
+  const distUnit = imperial ? "mi" : "km";
+  const card = el(`<div class="card"><h2>🔥 Burned</h2>
+    <p class="hint">Runs &amp; steps are auto-calculated from your weight. Resting burn is added automatically up top.</p>
+
+    <div class="sublbl">🏃 Add a run</div>
+    <div class="addrow">
+      <input class="t" id="runDist" type="number" inputmode="decimal" step="0.1" placeholder="distance (${distUnit})" />
+      <input class="t k" id="runTime" type="number" inputmode="numeric" placeholder="min" />
+      <button class="addbtn" id="runAdd">+</button>
+    </div>
+    <div class="calc" id="runCalc">Enter distance${imperial ? " in miles" : ""} — add minutes for a more exact estimate.</div>
+    <ul class="items" id="runList"></ul>
+
+    <div class="sublbl">👟 Steps today</div>
+    <div class="addrow">
+      <input class="t" id="stepIn" type="number" inputmode="numeric" placeholder="total steps" value="${day.steps || ""}" />
+      <button class="chip burn" id="step1k">+1k</button>
+      <button class="chip burn" id="step5h">+500</button>
+    </div>
+    <div class="calc" id="stepCalc"></div>
+
+    <div class="sublbl">🏋️ Workouts</div>
+    <div class="chips" id="woChips"></div>
+    <div class="addrow"><input class="t" id="woName" placeholder="Workout name" />
+      <input class="t k" id="woKcal" type="number" inputmode="numeric" placeholder="kcal" />
+      <button class="addbtn" id="woAdd">+</button></div>
+    <ul class="items" id="woList"></ul>
+  </div>`);
+
+  // run add
+  const rd = card.querySelector("#runDist"), rt = card.querySelector("#runTime"), rc = card.querySelector("#runCalc");
+  const previewRun = () => {
+    const distInput = parseFloat(rd.value); if (!distInput || distInput <= 0) { rc.textContent = `Enter distance${imperial ? " in miles" : ""} — add minutes for a more exact estimate.`; return; }
+    const km = imperial ? distInput * KM_PER_MI : distInput;
+    const tmin = parseFloat(rt.value) || 0;
+    const kcal = runKcal(km, tmin);
+    const pace = tmin > 0 ? (tmin / (imperial ? distInput : km)) : 0;
+    rc.textContent = `≈ ${kcal} kcal` + (pace ? ` · ${pace.toFixed(1)} min/${distUnit}` : "");
+  };
+  rd.oninput = previewRun; rt.oninput = previewRun;
+  card.querySelector("#runAdd").onclick = () => {
+    const distInput = parseFloat(rd.value); if (!distInput || distInput <= 0) { rd.focus(); return; }
+    const km = imperial ? distInput * KM_PER_MI : distInput;
+    const tmin = parseFloat(rt.value) || 0;
+    day.runs.push({ id: uid(), distanceKm: km, timeMin: tmin, kcal: runKcal(km, tmin) });
+    save(); render();
+  };
+  const rl = card.querySelector("#runList");
+  if (!day.runs.length) rl.appendChild(el(`<li class="empty">No runs logged.</li>`));
+  day.runs.forEach((r, i) => {
+    const dist = imperial ? (r.distanceKm / KM_PER_MI) : r.distanceKm;
+    const sub = `${dist.toFixed(2)} ${distUnit}` + (r.timeMin ? ` · ${r.timeMin} min` : "");
+    const li = el(`<li><span class="ic">🏃</span><span class="nm">Run <span class="sub2">${sub}</span></span><span class="kc">${r.kcal}</span><button class="del">✕</button></li>`);
+    li.querySelector(".del").onclick = () => { day.runs.splice(i, 1); save(); render(); };
+    rl.appendChild(li);
+  });
+
+  // steps
+  const si = card.querySelector("#stepIn"), sc = card.querySelector("#stepCalc");
+  const showSteps = () => { const v = parseFloat(si.value) || 0; sc.textContent = `≈ ${stepsKcal(v)} kcal from ${v.toLocaleString()} steps`; };
+  showSteps();
+  const setSteps = (v) => { day.steps = Math.max(0, Math.round(v)); save(); render(); };
+  si.onchange = () => setSteps(parseFloat(si.value) || 0);
+  si.oninput = showSteps;
+  card.querySelector("#step1k").onclick = () => setSteps((day.steps || 0) + 1000);
+  card.querySelector("#step5h").onclick = () => setSteps((day.steps || 0) + 500);
+
+  // workouts
+  const wc = card.querySelector("#woChips");
+  WORKOUT_PRESETS.forEach(p => { const b = el(`<button class="chip burn">${p.name} · ${p.kcal}</button>`); b.onclick = () => { day.workouts.push({ id: uid(), name: p.name, kcal: p.kcal }); save(); render(); }; wc.appendChild(b); });
+  const wn = card.querySelector("#woName"), wk = card.querySelector("#woKcal");
+  const woAdd = () => { const name = wn.value.trim(), k = wk.value === "" ? 0 : parseFloat(wk.value); if (!name && !k) return; day.workouts.push({ id: uid(), name: name || "Workout", kcal: k || 0 }); save(); render(); };
+  card.querySelector("#woAdd").onclick = woAdd;
+  wn.onkeydown = e => { if (e.key === "Enter") wk.focus(); };
+  wk.onkeydown = e => { if (e.key === "Enter") woAdd(); };
+  const wl = card.querySelector("#woList");
+  if (!day.workouts.length) wl.appendChild(el(`<li class="empty">No workouts logged.</li>`));
+  day.workouts.forEach((w, i) => {
+    const li = el(`<li><span class="ic">🏋️</span><span class="nm"></span><span class="kc">${Number(w.kcal) || 0}</span><button class="del">✕</button></li>`);
+    li.querySelector(".nm").textContent = w.name || "Workout";
+    li.querySelector(".del").onclick = () => { day.workouts.splice(i, 1); save(); render(); };
+    wl.appendChild(li);
+  });
+  return card;
 }
 
 function settingsCard() {
-  const n = nut();
-  const supported = ("Notification" in window);
-  const card = el(`<div class="card">
-    <h2>⚙️ Settings & reminders</h2>
-    <p class="hint">Set your budget and the times you want a nudge to eat.</p>
-    <div class="settings-grid">
-      <div><label class="f">Daily budget (kcal)</label><input class="t" id="budgetIn" type="number" inputmode="numeric" value="${n.budget}" /></div>
-      <div><label class="f">Move goal (kcal)</label><input class="t" id="burnIn" type="number" inputmode="numeric" value="${n.burnGoal}" /></div>
+  const p = state.profile, imperial = p.units === "imperial", supported = ("Notification" in window);
+  const ft = cmToFtIn(p.heightCm);
+  const card = el(`<div class="card"><h2>⚙️ Settings</h2>
+    <p class="hint">Your stats power the automatic burn estimates. BMR right now: <b>${Math.round(bmr())}</b> kcal/day.</p>
+
+    <div class="sublbl">Your body stats</div>
+    <div class="grid2">
+      <div><label class="f">Sex (for BMR)</label>
+        <select class="t" id="sex" style="width:100%">
+          <option value="female" ${p.sex === "female" ? "selected" : ""}>Female</option>
+          <option value="male" ${p.sex === "male" ? "selected" : ""}>Male</option>
+          <option value="other" ${p.sex === "other" ? "selected" : ""}>Prefer not to say</option>
+        </select></div>
+      <div><label class="f">Age</label><input class="t" id="age" type="number" inputmode="numeric" value="${p.age}" style="width:100%" /></div>
     </div>
-    <label class="f">Reminder times</label>
+    <div class="grid2">
+      <div><label class="f">Weight (${imperial ? "lb" : "kg"})</label><input class="t" id="weight" type="number" inputmode="decimal" value="${imperial ? Math.round(kgToLb(p.weightKg) * 10) / 10 : Math.round(p.weightKg * 10) / 10}" style="width:100%" /></div>
+      <div id="heightWrap"></div>
+    </div>
+    <button class="togbtn" id="unitTog">📐 Units: ${imperial ? "Imperial (lb / ft·in)" : "Metric (kg / cm)"} — tap to switch</button>
+
+    <div class="sublbl">Daily budget</div>
+    <input class="t" id="budget" type="number" inputmode="numeric" value="${state.budget}" />
+
+    <div class="sublbl">Meal reminder times</div>
     <div class="timechips" id="times"></div>
-    <button class="togbtn ${n.remindersOn ? "on" : ""}" id="remTog">${n.remindersOn ? "🔔 Meal reminders are ON — tap to turn off" : "🔕 Turn on meal reminders"}</button>
-    <button class="togbtn ${n.sound ? "on" : ""}" id="sndTog">${n.sound ? "🔊 Reminder sound ON" : "🔇 Reminder sound OFF"}</button>
+    <button class="togbtn ${state.remindersOn ? "on" : ""}" id="remTog">${state.remindersOn ? "🔔 Meal reminders are ON — tap to turn off" : "🔕 Turn on meal reminders"}</button>
+    <button class="togbtn ${state.sound ? "on" : ""}" id="sndTog">${state.sound ? "🔊 Reminder sound ON" : "🔇 Reminder sound OFF"}</button>
     <button class="togbtn" id="testBtn">▶︎ Test a reminder now</button>
     <button class="togbtn hide" id="installBtn">⬇️ Install as an app on this laptop</button>
     <div id="permNote"></div>
   </div>`);
 
-  card.querySelector("#budgetIn").onchange = (e) => { n.budget = e.target.value === "" ? 0 : parseFloat(e.target.value); save(); render(); };
-  card.querySelector("#burnIn").onchange = (e) => { n.burnGoal = e.target.value === "" ? 0 : parseFloat(e.target.value); save(); render(); };
+  // height field depends on units
+  const hw = card.querySelector("#heightWrap");
+  if (imperial) {
+    hw.innerHTML = `<label class="f">Height</label><div class="grid2"><input class="t" id="hft" type="number" inputmode="numeric" value="${ft.ft}" placeholder="ft" style="width:100%" /><input class="t" id="hin" type="number" inputmode="numeric" value="${ft.inch}" placeholder="in" style="width:100%" /></div>`;
+  } else {
+    hw.innerHTML = `<label class="f">Height (cm)</label><input class="t" id="hcm" type="number" inputmode="numeric" value="${Math.round(p.heightCm)}" style="width:100%" />`;
+  }
 
-  // reminder time chips + add control
+  card.querySelector("#sex").onchange = e => { p.sex = e.target.value; save(); render(); };
+  card.querySelector("#age").onchange = e => { p.age = Math.max(10, parseInt(e.target.value) || p.age); save(); render(); };
+  card.querySelector("#weight").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.weightKg = imperial ? lbToKg(v) : v; save(); render(); };
+  if (imperial) {
+    const hf = card.querySelector("#hft"), hi = card.querySelector("#hin");
+    const seth = () => { p.heightCm = ftInToCm(parseInt(hf.value) || 0, parseInt(hi.value) || 0); save(); render(); };
+    hf.onchange = seth; hi.onchange = seth;
+  } else {
+    card.querySelector("#hcm").onchange = e => { const v = parseFloat(e.target.value); if (v > 0) p.heightCm = v; save(); render(); };
+  }
+  card.querySelector("#unitTog").onclick = () => { p.units = imperial ? "metric" : "imperial"; save(); render(); };
+  card.querySelector("#budget").onchange = e => { state.budget = e.target.value === "" ? 0 : parseFloat(e.target.value); save(); render(); };
+
   const times = card.querySelector("#times");
-  n.reminders.slice().sort().forEach(time => {
+  state.reminders.slice().sort().forEach(time => {
     const chip = el(`<span class="timechip"><span>${fmtTime(time)}</span><button>✕</button></span>`);
-    chip.querySelector("button").onclick = () => { n.reminders = n.reminders.filter(r => r !== time); save(); render(); };
+    chip.querySelector("button").onclick = () => { state.reminders = state.reminders.filter(r => r !== time); save(); render(); };
     times.appendChild(chip);
   });
   const ti = el(`<input class="t" id="timeIn" type="time" style="width:auto;padding:6px 9px" />`);
   const ta = el(`<button class="addbtn">+ time</button>`);
-  ta.onclick = () => { const v = ti.value; if (v && !n.reminders.includes(v)) { n.reminders.push(v); save(); render(); } };
+  ta.onclick = () => { const v = ti.value; if (v && !state.reminders.includes(v)) { state.reminders.push(v); save(); render(); } };
   times.appendChild(ti); times.appendChild(ta);
 
   card.querySelector("#remTog").onclick = async () => {
-    if (!n.remindersOn) {
-      if (supported && Notification.permission !== "granted") { try { await Notification.requestPermission(); } catch (e) {} }
-      n.remindersOn = true;
-    } else n.remindersOn = false;
+    if (!state.remindersOn) { if (supported && Notification.permission !== "granted") { try { await Notification.requestPermission(); } catch (e) {} } state.remindersOn = true; }
+    else state.remindersOn = false;
     save(); render();
   };
-  card.querySelector("#sndTog").onclick = () => { n.sound = !n.sound; if (n.sound) { initAudio(); chime(); } save(); render(); };
+  card.querySelector("#sndTog").onclick = () => { state.sound = !state.sound; if (state.sound) { initAudio(); chime(); } save(); render(); };
   card.querySelector("#testBtn").onclick = () => { initAudio(); fireReminder(null, true); };
 
-  // install button (shown when the browser offers it)
   const installBtn = card.querySelector("#installBtn");
-  if (deferredPrompt) {
-    installBtn.classList.remove("hide");
-    installBtn.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; installBtn.classList.add("hide"); };
-  }
+  if (deferredPrompt) { installBtn.classList.remove("hide"); installBtn.onclick = async () => { deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch (e) {} deferredPrompt = null; installBtn.classList.add("hide"); }; }
 
-  // permission note
   const note = card.querySelector("#permNote");
-  if (n.remindersOn) {
+  if (state.remindersOn) {
     if (!supported) note.innerHTML = `<div class="warn">This browser can't show system notifications, but you'll still get the in-app pop-up + sound while the app is open.</div>`;
     else if (Notification.permission === "denied") note.innerHTML = `<div class="warn">⚠️ Notifications are blocked. You'll still get the in-app pop-up + sound. To get system alerts, allow notifications in your browser's site settings.</div>`;
-    else if (Notification.permission === "granted") note.innerHTML = `<div class="ok">✓ All set — keep this app open (you can minimize it) and it'll nudge you at each time.</div>`;
-    else note.innerHTML = `<div class="warn">Tap “Turn on meal reminders” again and choose Allow to get system alerts.</div>`;
+    else if (Notification.permission === "granted") note.innerHTML = `<div class="ok">✓ All set — keep this app open (minimized is fine) and it'll nudge you at each time.</div>`;
+    else note.innerHTML = `<div class="warn">Tap “Turn on meal reminders” again and choose Allow for system alerts.</div>`;
   }
   return card;
 }
 
-/* ============ sound ============ */
-let audioCtx;
-function initAudio() {
-  try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
-  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+/* live update of the resting/net numbers without a full re-render (keeps inputs focused) */
+function liveTick() {
+  const iso = calISO();
+  const n = dayNums(iso);
+  const over = n.net > state.budget;
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set("netVal", n.net); set("eatenVal", n.eaten); set("burnedVal", n.burned);
+  set("restVal", n.resting); set("runsVal", n.runs); set("stepsVal", n.steps); set("stepCnt", n.stepsCount); set("workVal", n.workouts); set("totBurn", n.burned);
+  const left = document.getElementById("leftVal"); if (left) { left.textContent = over ? (n.net - state.budget) + " over" : (state.budget - n.net) + " left"; left.classList.toggle("over", over); }
+  const eb = document.getElementById("eatBar"); if (eb) eb.style.width = (state.budget > 0 ? Math.min(100, Math.round((n.eaten / state.budget) * 100)) : 0) + "%";
+  const rb = document.getElementById("restBar"); if (rb) rb.style.width = Math.min(100, Math.round((restingSoFar(iso) / Math.max(1, bmr())) * 100)) + "%";
+  const rm = document.getElementById("restMini"); if (rm) rm.textContent = `~${Math.round(bmr())} kcal/day at rest (${calOffset === 0 ? "ticks up through the day" : "full day"})`;
 }
+
+/* ===================== sound ===================== */
+let audioCtx;
+function initAudio() { try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); }
 function chime() {
-  if (!nut().sound) return;
-  initAudio(); if (!audioCtx) return;
+  if (!state.sound) return; initAudio(); if (!audioCtx) return;
   const t0 = audioCtx.currentTime;
-  [659.25, 880, 1046.5, 1318.5].forEach((f, i) => {       // E5 A5 C6 E6 — a happy little arpeggio
+  [659.25, 880, 1046.5, 1318.5].forEach((f, i) => {
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = "triangle"; o.frequency.value = f;
     const t = t0 + i * 0.14;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.3, t + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-    o.connect(g).connect(audioCtx.destination);
-    o.start(t); o.stop(t + 0.55);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.3, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + 0.55);
   });
 }
-// Unlock audio on the first interaction so auto-fired chimes can play.
 document.addEventListener("pointerdown", initAudio, { once: true });
 
-/* ============ reminders ============ */
+/* ===================== reminders ===================== */
 let titleTimer, snoozedUntil = 0;
 function fireReminder(time, isTest) {
   chime();
-  showBanner(time, isTest);
+  const b = document.getElementById("banner");
+  document.getElementById("bannerSub").textContent = isTest ? "Test reminder — this is what a nudge looks like." : `Scheduled nudge for ${fmtTime(time)}. Tap “I'm eating” once you've grabbed a bite.`;
+  b.classList.add("show"); clearTimeout(b._t); b._t = setTimeout(hideBanner, 90000);
   if (("Notification" in window) && Notification.permission === "granted") {
-    const opts = { body: isTest ? "This is a test 🍓" : `It's ${fmtTime(time)} — fuel up to stay on track.`,
-      icon: "icon-192.png", badge: "icon-192.png", tag: "calorie-cutie-meal", renotify: true };
-    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-      navigator.serviceWorker.ready.then(reg => reg.showNotification("🍓 Time to eat!", opts)).catch(() => { try { new Notification("🍓 Time to eat!", opts); } catch (e) {} });
-    } else { try { new Notification("🍓 Time to eat!", opts); } catch (e) {} }
+    const opts = { body: isTest ? "This is a test 🍓" : `It's ${fmtTime(time)} — fuel up to stay on track.`, icon: "icon-192.png", badge: "icon-192.png", tag: "calorie-cutie-meal", renotify: true };
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification("🍓 Time to eat!", opts)).catch(() => { try { new Notification("🍓 Time to eat!", opts); } catch (e) {} });
+    else try { new Notification("🍓 Time to eat!", opts); } catch (e) {}
   }
   try { window.focus(); } catch (e) {}
   flashTitle();
 }
-function showBanner(time, isTest) {
-  const b = document.getElementById("banner");
-  document.getElementById("bannerSub").textContent = isTest ? "Test reminder — this is what a nudge looks like."
-    : `Scheduled nudge for ${fmtTime(time)}. Tap “I'm eating” once you've grabbed a bite.`;
-  b.classList.add("show");
-  clearTimeout(b._t); b._t = setTimeout(() => hideBanner(), 90000);
-}
 function hideBanner() { document.getElementById("banner").classList.remove("show"); stopTitle(); }
-function flashTitle() {
-  stopTitle();
-  let on = true; const base = "🍓 Calorie Cutie";
-  titleTimer = setInterval(() => { document.title = on ? "🍓 TIME TO EAT! ←" : base; on = !on; }, 900);
-}
+function flashTitle() { stopTitle(); let on = true; titleTimer = setInterval(() => { document.title = on ? "🍓 TIME TO EAT! ←" : "🍓 Calorie Cutie"; on = !on; }, 900); }
 function stopTitle() { clearInterval(titleTimer); document.title = "🍓 Calorie Cutie"; }
-
 function checkReminders() {
-  const n = nut();
-  if (!n.remindersOn || !Array.isArray(n.reminders)) return;
+  if (!state.remindersOn || !Array.isArray(state.reminders)) return;
   if (Date.now() < snoozedUntil) return;
   const iso = today(), now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
   let dirty = false;
-  Object.keys(n.fired).forEach(k => { if (!k.startsWith(iso + "|")) { delete n.fired[k]; dirty = true; } });
-  n.reminders.forEach(time => {
-    const [h, m] = time.split(":").map(Number);
-    if (isNaN(h)) return;
+  Object.keys(state.fired).forEach(k => { if (!k.startsWith(iso + "|")) { delete state.fired[k]; dirty = true; } });
+  state.reminders.forEach(time => {
+    const [h, m] = time.split(":").map(Number); if (isNaN(h)) return;
     const target = h * 60 + (m || 0), key = iso + "|" + time;
-    if (nowMin >= target && nowMin < target + 30 && !n.fired[key]) {
-      n.fired[key] = true; dirty = true;
-      fireReminder(time, false);
-    }
+    if (nowMin >= target && nowMin < target + 30 && !state.fired[key]) { state.fired[key] = true; dirty = true; fireReminder(time, false); }
   });
   if (dirty) save();
 }
 
-/* ============ install + service worker ============ */
+/* ===================== install + service worker ===================== */
 let deferredPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; if (showSettings) render(); });
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; if (showSettings) render(); });
 window.addEventListener("appinstalled", () => { deferredPrompt = null; if (showSettings) render(); });
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
-}
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-/* ============ banner buttons + gear ============ */
-document.getElementById("ateBtn").onclick = () => { hideBanner(); };
+/* ===================== wiring ===================== */
+document.getElementById("ateBtn").onclick = hideBanner;
 document.getElementById("snoozeBtn").onclick = () => { snoozedUntil = Date.now() + 10 * 60 * 1000; hideBanner(); };
 document.getElementById("gearBtn").onclick = () => { showSettings = !showSettings; render(); if (showSettings) document.getElementById("main").lastChild.scrollIntoView({ behavior: "smooth", block: "nearest" }); };
 
-/* ============ go ============ */
 render();
 checkReminders();
 setInterval(checkReminders, 20000);
-// keep "today" fresh if left open past midnight
+// live-tick the resting burn so it visibly climbs through the day (skip while typing)
+setInterval(() => { const a = document.activeElement; if (a && (a.tagName === "INPUT" || a.tagName === "SELECT")) return; liveTick(); }, 15000);
 let _lastDay = today();
 setInterval(() => { if (today() !== _lastDay) { _lastDay = today(); calOffset = 0; render(); } }, 30000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { appState = readDisk(); render(); checkReminders(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { render(); checkReminders(); } });
 </script>
 </body>
 </html>
