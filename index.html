@@ -482,6 +482,20 @@ function seedContent(s) {
   s.seeded = true;
   s.habitsV2 = true;
   s.roadmapsV2 = true;
+  s.calorieV1 = true;
+}
+
+// One-time: add the daily calorie habit + the 115-plan calorie subgoal.
+function migrateCalorieV1(s) {
+  if (s.calorieV1) return;
+  if (Array.isArray(s.habits) && !s.habits.some(h => /cal/i.test(h.name || ""))) {
+    s.habits.push({ id: uid(), name: "Under 1300 cals 🍓", days: {}, target: null });
+  }
+  const wp = (s.roadmaps || []).find(p => p.id === "weight");
+  if (wp && Array.isArray(wp.steps) && !wp.steps.some(x => /cal/i.test(x.text || ""))) {
+    wp.steps.unshift({ text: "Stay under 1300 calories each day", done: false });
+  }
+  s.calorieV1 = true;
 }
 
 // Turn the single robotics roadmap into a list of plans (one per goal).
@@ -515,6 +529,7 @@ function defaultHabits() {
     { id: uid(), name: "CSWA", days: {}, target: null },
     { id: uid(), name: "Daily exercise", days: {}, target: null },
     { id: uid(), name: "20k steps", days: {}, target: null },
+    { id: uid(), name: "Under 1300 cals 🍓", days: {}, target: null },
     { id: uid(), name: "Journaling", days: {}, target: null },
     { id: uid(), name: "ROS2", days: {}, target: 2 }
   ];
@@ -613,6 +628,7 @@ function defaultRoadmaps() {
       "First unassisted pull-up 🎉"
     ]),
     plan("weight", "🌿", "Reach 115 lbs (feel strong)", [
+      "Stay under 1300 calories each day",
       "Pick one weekly weigh-in day (track the trend, not daily)",
       "Build balanced meals with enough protein",
       "Daily movement — aim for ~20k steps",
@@ -646,6 +662,7 @@ function migrate(s) {
   if (!Array.isArray(s.habits)) s.habits = [];
   migrateHabitsV2(s);
   migrateRoadmapsV2(s);
+  migrateCalorieV1(s);
   if (!Array.isArray(s.targets)) s.targets = [];
   migrateTargetsV2(s);
   if (!Array.isArray(s.audit) || s.audit.length === 0) s.audit = auditDefaults();
@@ -720,7 +737,14 @@ function save() {
 
 /* ---------------- Date helpers ---------------- */
 function today() { return toISO(new Date()); }
-function toISO(d) { return d.toISOString().slice(0, 10); }
+// Local calendar date (YYYY-MM-DD). Must NOT use toISOString(), which is UTC
+// and would roll the day over in the evening for anyone west of GMT.
+function toISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 function startOfWeek(d) {
   const x = new Date(d);
   const day = (x.getDay() + 6) % 7; // Monday = 0
@@ -1046,7 +1070,7 @@ function renderToday(view) {
   // today's habits
   const hcard = document.createElement("div");
   hcard.className = "card";
-  hcard.innerHTML = `<h2>Today's habits <span class="tag">${today()}</span></h2><p class="hint">Tap to check off. Manage them in the Habits tab.</p>`;
+  hcard.innerHTML = `<h2>Daily check-in <span class="tag">${new Date().toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</span></h2><p class="hint">Tick each habit as you do it today — they reset every morning so you can keep your 🔥 streak going.</p>`;
   if (state.habits.length === 0) {
     const p = document.createElement("p");
     p.style.color = "var(--muted)"; p.style.fontSize = "14px";
@@ -1069,7 +1093,9 @@ function renderToday(view) {
       span.textContent = h.name || "(unnamed habit)";
       const streak = document.createElement("span");
       streak.className = "habit-streak";
-      streak.textContent = currentStreak(h) > 0 ? currentStreak(h)+"🔥" : "";
+      streak.style.whiteSpace = "nowrap";
+      const cs = currentStreak(h);
+      streak.textContent = cs > 0 ? cs + "🔥" : (h.days[iso] ? "1🔥" : "·");
       li.appendChild(cb); li.appendChild(span); li.appendChild(streak);
       ul.appendChild(li);
     });
@@ -1816,6 +1842,17 @@ document.getElementById("resetBtn").onclick = () => {
 
 /* ---------------- Go ---------------- */
 render();
+
+// When the calendar day changes (incl. leaving the app open overnight), re-render
+// so today's habits are fresh and ready to check off again.
+let _lastDay = today();
+setInterval(() => {
+  if (today() !== _lastDay) { _lastDay = today(); render(); }
+}, 30000);
+// Also re-check the moment the app/tab regains focus.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && today() !== _lastDay) { _lastDay = today(); render(); }
+});
 </script>
 </body>
 </html>
